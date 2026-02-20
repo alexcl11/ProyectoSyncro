@@ -317,31 +317,28 @@
         <nav class="sidebar-nav">
             <div class="nav-label">Tus Tablas</div>
 
-            <a href="#" class="nav-item active">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                Clientes
-            </a>
+            @{
+                var TablasEmpresa = ViewData["TablasEmpresa"] as List<string>;
+            }
 
-            <a href="#" class="nav-item">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <polyline points="9 11 12 14 22 4"></polyline>
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                </svg>
-                Tareas
-            </a>
-
-            <a href="#" class="nav-item">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                </svg>
-                Presupuestos
-            </a>
+            @if (TablasEmpresa != null && TablasEmpresa.Any())
+            {
+                foreach (string tabla in TablasEmpresa)
+                {
+                    <a href="#" class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        </svg>
+                        @tabla
+                    </a>
+                }
+            }
+            else
+            {
+                <div style="padding: 10px 15px; font-size: 0.8rem; color: var(--text-muted);">
+                    Aún no tienes tablas.
+                </div>
+            }
 
             <a href="#" class="nav-item" onclick="openModal()" style="color: var(--brand); margin-top: 15px; border: 1px dashed #cbd5e1; background: transparent;">
                 <svg class="nav-icon" viewBox="0 0 24 24">
