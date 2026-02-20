@@ -1,7 +1,5 @@
-﻿@{
-    // Solo el texto limpio. El icono lo pondremos en el Layout.
-    ViewData["Title"] = "Tareas de Reforma";
-}
+﻿
+@model List<Dictionary<string, object>>
 
 <style>
     /* Estilos específicos para la vista de la tabla */
@@ -139,6 +137,153 @@
         stroke-linejoin: round;
         fill: none;
     }
+
+    /* --- Estilos existentes de la Toolbar y Tabs --- */
+    .table-toolbar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .view-tabs {
+        display: flex;
+        gap: 8px;
+        background: #f1f5f9;
+        padding: 6px;
+        border-radius: 12px;
+    }
+
+    .view-tab {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .view-tab.active {
+            background: #fff;
+            color: var(--brand);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+        }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+    }
+
+    /* --- NUEVOS ESTILOS DE LA TABLA MEJORADA --- */
+    .data-table-container {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        /* Importante: definimos una altura máxima para que el scroll funcione dentro */
+        max-height: calc(100vh - 220px);
+        overflow: auto;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+        position: relative;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: separate; /* Necesario para el sticky header */
+        border-spacing: 0;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+        .data-table th {
+            background: #f8fafc;
+            /* Cabecera pegajosa (Sticky Header) */
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+    /* Contenedor para el icono y el texto del th */
+    .th-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Iconos más pequeñitos y sutiles para las cabeceras */
+    .th-icon {
+        width: 14px;
+        height: 14px;
+        stroke: var(--text-muted);
+        stroke-width: 2;
+        opacity: 0.7;
+    }
+
+    .data-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-main);
+        /* Truco para cortar texto largo con "..." */
+        max-width: 300px; /* Ancho máximo de celda */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .data-table tbody tr {
+        transition: background 0.1s;
+    }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    /* Estilo para la columna de checkboxes */
+    .col-checkbox {
+        width: 40px;
+        text-align: center;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    input[type="checkbox"] {
+        cursor: pointer;
+        accent-color: var(--brand);
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+    }
+
+
 </style>
 
 <div class="table-toolbar">
@@ -194,42 +339,102 @@
 </div>
 
 <div class="data-table-container">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th style="width: 40px;"><input type="checkbox"></th>
-                <th>Nombre de la Tarea</th>
-                <th>Estado</th>
-                <th>Cliente (Relación)</th>
-                <th>Prioridad</th>
-                <th>Fecha Límite</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td style="font-weight: 600; color: var(--text-main);">Instalar ventanas climalit</td>
-                <td><span class="chip chip-blue">En Curso</span></td>
-                <td><span class="cell-relation">JL Marlo Renovation</span></td>
-                <td><span class="chip chip-orange">Alta</span></td>
-                <td style="color: var(--text-muted);">25 Oct 2026</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td style="font-weight: 600; color: var(--text-main);">Revisión cuadro eléctrico</td>
-                <td><span class="chip chip-gray">Pendiente</span></td>
-                <td><span class="cell-relation">Estudio 54</span></td>
-                <td><span class="chip chip-blue">Media</span></td>
-                <td style="color: var(--text-muted);">02 Nov 2026</td>
-            </tr>
-            <tr>
-                <td><input type="checkbox"></td>
-                <td style="font-weight: 600; color: var(--text-main);">Pintura fachada exterior</td>
-                <td><span class="chip chip-green">Completado</span></td>
-                <td><span class="cell-relation">Casa Verde</span></td>
-                <td><span class="chip chip-gray">Baja</span></td>
-                <td style="color: var(--text-muted);">15 Oct 2026</td>
-            </tr>
-        </tbody>
-    </table>
+    @if (Model != null && Model.Any())
+    {
+        // --- LÓGICA RAZOR PARA DETECTAR TIPOS ---
+        // Cogemos la primera fila para "adivinar" los tipos de datos
+        var primeraFila = Model.First();
+
+        // Función local para elegir el icono SVG según el tipo de dato C#
+        string GetIconoPorTipo(object valorEjemplo)
+        {
+            if (valorEjemplo is DateTime)
+            {
+                // Icono Calendario (Fecha)
+                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'></rect><line x1='16' y1='2' x2='16' y2='6'></line><line x1='8' y1='2' x2='8' y2='6'></line><line x1='3' y1='10' x2='21' y2='10'></line></svg>";
+            }
+            if (valorEjemplo is int || valorEjemplo is long || valorEjemplo is decimal || valorEjemplo is double || valorEjemplo is float)
+            {
+                // Icono Numeral (Número)
+                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='4' y1='9' x2='20' y2='9'></line><line x1='4' y1='15' x2='20' y2='15'></line><line x1='10' y1='3' x2='8' y2='21'></line><line x1='16' y1='3' x2='14' y2='21'></line></svg>";
+            }
+            if (valorEjemplo is bool)
+            {
+                // Icono Check (Booleano/Si-No)
+                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 11 12 14 22 4'></polyline><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'></path></svg>";
+            }
+            // Por defecto: Icono Texto (Aa)
+            return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M4 7V4h16v3'></path><path d='M9 20h6'></path><line x1='12' y1='4' x2='12' y2='20'></line></svg>";
+        }
+        // ---------------------------------------
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-checkbox"><input type="checkbox"></th>
+
+                    @foreach (var nombreColumna in primeraFila.Keys)
+                    {
+                        // Sacamos el valor de ejemplo para ver su tipo
+                        var valorEjemplo = primeraFila[nombreColumna];
+                        // Obtenemos el SVG correspondiente
+                        string iconoSvg = GetIconoPorTipo(valorEjemplo);
+
+                        <th>
+                            <div class="th-content">
+                                @Html.Raw(iconoSvg)
+                                @nombreColumna
+                            </div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var fila in Model)
+                {
+                    <tr>
+                        <td class="col-checkbox"><input type="checkbox"></td>
+
+                        @foreach (var valor in fila.Values)
+                        {
+                            // Pintamos el dato, formateando si es fecha
+                            if (valor is DateTime fecha)
+                            {
+                                // Formato corto para fechas (ej: 25/10/2026)
+                                <td title="@fecha.ToLongDateString()">@fecha.ToShortDateString()</td>
+                            }
+                            else
+                            {
+                                // El atributo 'title' muestra el texto completo al pasar el ratón si se ha cortado con "..."
+                                <td title="@valor">@(valor != null ? valor.ToString() : "")</td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div style="padding: 80px 20px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
+                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--text-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                    <path d="M12 14h.01" />
+                </svg>
+            </div>
+
+            <h3 style="margin: 0 0 8px; color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif;">Tabla sin datos</h3>
+            <p style="margin: 0 0 24px; color: var(--text-muted); max-width: 400px;">Esta tabla está lista pero aún no tiene registros. Empieza añadiendo el primero.</p>
+            <button class="btn btn-primary">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Añadir primer registro
+            </button>
+        </div>
+    }
 </div>

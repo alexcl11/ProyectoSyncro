@@ -37,5 +37,45 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
+        public async Task<List<Dictionary<string, object>>> GetDatosTablaEmpresaAsync(int idEmpresa, string nombreTabla)
+        {
+            string sql = "SP_MOTRAR_TABLA_EMPRESA";
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@nombreTabla", nombreTabla);
+            var datos = new List<Dictionary<string, object>>();
+            using (DbCommand com =
+                this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+                await com.Connection.OpenAsync();
+                DbDataReader reader = await com.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var fila = new Dictionary<string, object>();
+
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        string nombreColumna = reader.GetName(i);
+
+                        if (nombreColumna.ToLower() != "fechacreacion" || nombreColumna.ToLower() != "id")
+                        {
+                            object valorDato = reader.IsDBNull(i) ? null : reader.GetValue(i);
+
+                            fila.Add(nombreColumna, valorDato);
+                            
+                        }
+                        
+                    }
+                    datos.Add(fila);
+                }
+                await reader.CloseAsync();
+                await com.Connection.CloseAsync();
+                return datos;
+            }
+        }
+
     }
 }
