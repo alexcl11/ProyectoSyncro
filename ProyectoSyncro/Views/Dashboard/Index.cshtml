@@ -1,0 +1,235 @@
+﻿@{
+    // Solo el texto limpio. El icono lo pondremos en el Layout.
+    ViewData["Title"] = "Tareas de Reforma";
+}
+
+<style>
+    /* Estilos específicos para la vista de la tabla */
+    .table-toolbar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .view-tabs {
+        display: flex;
+        gap: 8px;
+        background: #f1f5f9;
+        padding: 6px;
+        border-radius: 12px;
+    }
+
+    .view-tab {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+        .view-tab.active {
+            background: #fff;
+            color: var(--brand);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+        }
+
+    .data-table-container {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow-x: auto;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+        .data-table th, .data-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.1s;
+        }
+
+            .data-table tbody tr:hover {
+                background: #f8fafc;
+            }
+
+            .data-table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+    /* Los famosos "Pills" o etiquetas de estados */
+    .chip {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .chip-blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .chip-green {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .chip-orange {
+        background: #ffedd5;
+        color: #c2410c;
+    }
+
+    .chip-gray {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    /* Estilo para las columnas que son Relaciones con otras tablas */
+    .cell-relation {
+        color: var(--brand);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-color: #cbd5e1;
+        text-underline-offset: 4px;
+    }
+
+        .cell-relation:hover {
+            text-decoration-color: var(--brand);
+        }
+    /* Añade esto a tus estilos existentes */
+    .view-tab, .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px; /* Separación entre el icono y el texto */
+    }
+
+    /* Tamaño estándar para los iconos */
+    .icon {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+    }
+</style>
+
+<div class="table-toolbar">
+    <div class="view-tabs">
+        <div class="view-tab active">
+            <svg class="icon" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            Tabla
+        </div>
+        <div class="view-tab">
+            <svg class="icon" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Calendario
+        </div>
+        <div class="view-tab">
+            <svg class="icon" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+                <line x1="15" y1="3" x2="15" y2="21"></line>
+            </svg>
+            Kanban
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <button class="btn btn-outline">
+            <svg class="icon" viewBox="0 0 24 24">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Filtrar
+        </button>
+        <button class="btn btn-outline">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
+            </svg>
+            Ordenar
+        </button>
+        <button class="btn btn-primary">
+            <svg class="icon" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Nuevo Registro
+        </button>
+    </div>
+</div>
+
+<div class="data-table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;"><input type="checkbox"></th>
+                <th>Nombre de la Tarea</th>
+                <th>Estado</th>
+                <th>Cliente (Relación)</th>
+                <th>Prioridad</th>
+                <th>Fecha Límite</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="checkbox"></td>
+                <td style="font-weight: 600; color: var(--text-main);">Instalar ventanas climalit</td>
+                <td><span class="chip chip-blue">En Curso</span></td>
+                <td><span class="cell-relation">JL Marlo Renovation</span></td>
+                <td><span class="chip chip-orange">Alta</span></td>
+                <td style="color: var(--text-muted);">25 Oct 2026</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox"></td>
+                <td style="font-weight: 600; color: var(--text-main);">Revisión cuadro eléctrico</td>
+                <td><span class="chip chip-gray">Pendiente</span></td>
+                <td><span class="cell-relation">Estudio 54</span></td>
+                <td><span class="chip chip-blue">Media</span></td>
+                <td style="color: var(--text-muted);">02 Nov 2026</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox"></td>
+                <td style="font-weight: 600; color: var(--text-main);">Pintura fachada exterior</td>
+                <td><span class="chip chip-green">Completado</span></td>
+                <td><span class="cell-relation">Casa Verde</span></td>
+                <td><span class="chip chip-gray">Baja</span></td>
+                <td style="color: var(--text-muted);">15 Oct 2026</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

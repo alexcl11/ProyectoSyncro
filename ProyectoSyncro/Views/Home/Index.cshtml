@@ -1,0 +1,744 @@
+﻿@{
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="~/favicon.png" />
+    <title>Syncro - Landing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+          rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/landing.css" />
+</head>
+<body>
+    <div class="page">
+        <header class="site-header">
+            <nav class="nav">
+                <div class="container nav-inner">
+                    <a class="brand" href="#top">
+                        <img src="~/img/logo.png" alt="Logo Syncro" style="height: 50px; width: auto;" />
+                        
+                    </a>
+                    <div class="nav-links">
+                        <a href="#features">Caracteristicas</a>
+                        <a href="#how-it-works">Como funciona</a>
+                        <a href="#use-cases">Casos de uso</a>
+                        <a href="#pricing">Precios</a>
+                    </div>
+                    <div class="nav-cta">
+                        <a href="/Auth/Login" class="btn btn-ghost">Iniciar sesion</a>
+                        <a href="/Auth/Register" class="btn btn-primary">Empezar gratis</a>
+                    </div>
+                    <button class="nav-toggle" type="button" aria-expanded="false" data-menu-toggle>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+                <div class="nav-mobile" data-mobile-menu>
+                    <div class="nav-mobile-links">
+                        <a href="#features">Caracteristicas</a>
+                        <a href="#how-it-works">Como funciona</a>
+                        <a href="#use-cases">Casos de uso</a>
+                        <a href="#pricing">Precios</a>
+                        <div class="nav-mobile-actions">
+                            <button class="btn btn-ghost">Iniciar sesion</button>
+                            <button class="btn btn-primary">Empezar gratis</button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main id="top">
+            <section class="hero">
+                <div class="hero-bg">
+                    <span class="blob blob-one"></span>
+                    <span class="blob blob-two"></span>
+                    <span class="blob blob-three"></span>
+                </div>
+                <div class="container hero-content">
+                    <div class="hero-topline">
+                        <span class="dot"></span>
+                        Nuevo: Relaciones Inteligentes 2.0
+                    </div>
+                    <h1>
+                        Tu negocio no es estandar.<br />
+                        <span class="gradient-text">Tu software tampoco.</span>
+                    </h1>
+                    <p>
+                        Construye tu propio CRM, gestor de proyectos o base de datos en minutos.
+                        Sin codigo, sin limites y adaptado exactamente a tu forma de trabajar.
+                    </p>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-lg">
+                            Crear mi espacio de trabajo
+                            <span class="icon">→</span>
+                        </button>
+                        <button class="btn btn-outline btn-lg">Ver demo en vivo</button>
+                    </div>
+                    <div class="hero-trust">
+                        <span>Sin tarjeta de credito</span>
+                        <span>Cancelacion gratuita</span>
+                        <span>Soporte 24/7</span>
+                    </div>
+
+                    <div class="hero-mockup">
+                        <div class="mockup-browser">
+                            <div class="mockup-bar">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                                <div class="mockup-url">app.syncro.com/dashboard</div>
+                            </div>
+                            <div class="mockup-table">
+                                <div class="mockup-toolbar">
+                                    <div class="title">📊 Tareas de Reforma</div>
+                                    <div class="tabs">
+                                        <span class="tab active">Activos</span>
+                                        <span class="tab">Prioridad</span>
+                                        <span class="tab">Calendario</span>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Tarea</th>
+                                            <th>Estado</th>
+                                            <th>Cliente</th>
+                                            <th>Prioridad</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="check"></span></td>
+                                            <td>Instalar ventanas</td>
+                                            <td><span class="chip chip-blue">En Curso</span></td>
+                                            <td><span class="rel">JL Marlo</span></td>
+                                            <td><span class="chip chip-red">Alta</span></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="check"></span></td>
+                                            <td>Revision electrica</td>
+                                            <td><span class="chip chip-gray">Pendiente</span></td>
+                                            <td><span class="rel">Estudio 54</span></td>
+                                            <td><span class="chip chip-orange">Media</span></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="check"></span></td>
+                                            <td>Compra de materiales</td>
+                                            <td><span class="chip chip-green">Completado</span></td>
+                                            <td><span class="rel">JL Marlo</span></td>
+                                            <td><span class="chip chip-red">Alta</span></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="check"></span></td>
+                                            <td>Pintura fachada</td>
+                                            <td><span class="chip chip-gray">Pendiente</span></td>
+                                            <td><span class="rel">Casa Verde</span></td>
+                                            <td><span class="chip chip-blue">Baja</span></td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="mockup-footer">4 registros</div>
+                            </div>
+                        </div>
+
+                        <div class="float-card float-right">
+                            <div class="card-header">
+                                <div class="avatar">JL</div>
+                                <div>
+                                    <div class="card-title">JL Marlo</div>
+                                    <div class="card-sub">Cliente VIP</div>
+                                </div>
+                            </div>
+                            <div class="progress">
+                                <span></span>
+                            </div>
+                            <div class="progress-meta">
+                                <span>Proyectos</span>
+                                <span>75%</span>
+                            </div>
+                        </div>
+
+                        <div class="float-card float-left">
+                            <div class="card-label">Estado</div>
+                            <div class="pill-row">
+                                <span class="chip chip-green">Completado</span>
+                                <span class="chip chip-blue">En Curso</span>
+                            </div>
+                            <div class="pill-row">
+                                <span class="chip chip-yellow">Revision</span>
+                                <span class="chip chip-gray">Pendiente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="logos">
+                <div class="container">
+                    <p>Empresas de todos los tamanos ya organizan su caos con nosotros:</p>
+                    <div class="logo-row">
+                        <span>◇ JL Marlo Renovation</span>
+                        <span>⬡ Design Studio 54</span>
+                        <span>△ Alpha Construction</span>
+                        <span>● Omega Marketing</span>
+                        <span>■ TechFlow Systems</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features" id="features">
+                <div class="container">
+                    <h2>Todo lo que necesitas para organizar tu negocio</h2>
+                    <p class="section-lead">
+                        La potencia de una base de datos relacional con la simplicidad de una hoja de calculo.
+                    </p>
+                    <div class="feature-grid">
+                        <article class="feature-card">
+                            <div class="feature-icon blue">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3" y="3" width="8" height="8" rx="2"></rect>
+                                    <rect x="13" y="3" width="8" height="8" rx="2"></rect>
+                                    <rect x="3" y="13" width="8" height="8" rx="2"></rect>
+                                    <rect x="13" y="13" width="8" height="8" rx="2"></rect>
+                                </svg>
+                            </div>
+                            <h3>Tablas 100% flexibles</h3>
+                            <p>
+                                Anade columnas de texto, numeros, fechas o listas desplegables. Si tu proceso cambia manana, tu base de datos tambien.
+                            </p>
+                        </article>
+                        <article class="feature-card">
+                            <div class="feature-icon indigo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M10 14a4 4 0 0 1 0-8h3"></path>
+                                    <path d="M14 10a4 4 0 0 1 0 8h-3"></path>
+                                    <path d="M9 12h6"></path>
+                                </svg>
+                            </div>
+                            <h3>Relaciona tus datos</h3>
+                            <p>
+                                Vincula tareas con clientes, o facturas con proyectos. Adios a la informacion duplicada y a los Excels desincronizados.
+                            </p>
+                        </article>
+                        <article class="feature-card">
+                            <div class="feature-icon green">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6l7-3z"></path>
+                                    <path d="M9 12l2 2 4-4"></path>
+                                </svg>
+                            </div>
+                            <h3>Espacios aislados y seguros</h3>
+                            <p>
+                                Tu informacion vive en un entorno privado exclusivo para tu empresa. Seguridad de nivel empresarial desde el dia uno.
+                            </p>
+                        </article>
+                        <article class="feature-card">
+                            <div class="feature-icon purple">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="8" cy="8" r="3"></circle>
+                                    <circle cx="17" cy="7" r="2.5"></circle>
+                                    <path d="M3 20c0-3 3-5 6-5s6 2 6 5"></path>
+                                    <path d="M14 20c0-2 2-3.5 4-3.5s4 1.5 4 3.5"></path>
+                                </svg>
+                            </div>
+                            <h3>Trabajo en equipo</h3>
+                            <p>
+                                Invita a tus empleados, asigna roles de Administrador o Usuario y colaborad en tiempo real sobre los mismos datos.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="how" id="how-it-works">
+                <div class="container">
+                    <div class="section-head">
+                        <h2>Como funciona</h2>
+                        <p>Tres pasos simples para el orden total.</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-text">
+                            <span class="step-index">1</span>
+                            <h3>Crea tu estructura en segundos</h3>
+                            <p>Olvida los desarrollos caros. Escribe el nombre de tu tabla, anade las columnas que necesitas y listo.</p>
+                        </div>
+                        <div class="step-visual">
+                            <div class="visual-card">
+                                <div class="modal">
+                                    <div class="modal-head">
+                                        <span>Nueva Columna</span>
+                                        <span>✕</span>
+                                    </div>
+                                    <div class="modal-body">
+                                        <label>Nombre</label>
+                                        <div class="input">Estado del Proyecto</div>
+                                        <label>Tipo</label>
+                                        <div class="input select">Relacion <span>▼</span></div>
+                                        <button class="btn btn-primary">Crear Columna</button>
+                                    </div>
+                                    <div class="tooltip">Click!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step reverse">
+                        <div class="step-text">
+                            <span class="step-index">2</span>
+                            <h3>Personaliza tus estados</h3>
+                            <p>Dale vida a tus datos. Crea etiquetas de colores para saber exactamente en que fase se encuentra cada proyecto.</p>
+                        </div>
+                        <div class="step-visual">
+                            <div class="visual-card">
+                                <div class="dropdown">
+                                    <div class="dropdown-head">Seleccionar Estado</div>
+                                    <div class="dropdown-item">
+                                        <span class="dot gray"></span>Pendiente
+                                    </div>
+                                    <div class="dropdown-item active">
+                                        <span class="dot blue"></span>En Curso
+                                        <span class="checkmark">✓</span>
+                                    </div>
+                                    <div class="dropdown-item">
+                                        <span class="dot green"></span>Completado
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <div class="dropdown-item muted">
+                                        + Nuevo estado
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-text">
+                            <span class="step-index">3</span>
+                            <h3>Conecta todo tu negocio</h3>
+                            <p>Una tarea pertenece a un proyecto, y un proyecto a un cliente. Relaciona tus tablas para navegar por tu informacion de forma fluida.</p>
+                        </div>
+                        <div class="step-visual">
+                            <div class="visual-card">
+                                <div class="connected">
+                                    <div class="table-card">
+                                        <div class="table-title orange">Clientes</div>
+                                        <div class="table-row head">
+                                            <span>Nombre</span>
+                                            <span>ID</span>
+                                        </div>
+                                        <div class="table-row">
+                                            <span>JL Marlo</span>
+                                            <span>#001</span>
+                                        </div>
+                                        <div class="table-row">
+                                            <span>Studio 54</span>
+                                            <span>#002</span>
+                                        </div>
+                                        <span class="node right"></span>
+                                    </div>
+                                    <div class="table-card right">
+                                        <div class="table-title blue">Proyectos</div>
+                                        <div class="table-row head">
+                                            <span>Proyecto</span>
+                                            <span>Cliente</span>
+                                        </div>
+                                        <div class="table-row">
+                                            <span>Reforma Cocina</span>
+                                            <span class="tag">JL Marlo</span>
+                                        </div>
+                                        <div class="table-row">
+                                            <span>Bano Principal</span>
+                                            <span class="tag">Studio 54</span>
+                                        </div>
+                                        <span class="node left"></span>
+                                    </div>
+                                    <svg class="connector" viewBox="0 0 260 120" aria-hidden="true">
+                                        <circle class="connector-dot" cx="228" cy="92" r="3.5" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="use-cases" id="use-cases">
+                <div class="container">
+                    <div class="section-head">
+                        <h2>Adaptable a cualquier industria</h2>
+                        <p>Mira como Syncro transforma el trabajo en diferentes sectores.</p>
+                    </div>
+
+                    <div class="tabs-bar" data-tabs>
+                        <button class="tab-button active" data-tab-button="reformas">
+                            <span class="tab-icon">🛠</span> Reformas y construccion
+                        </button>
+                        <button class="tab-button" data-tab-button="agencias">
+                            <span class="tab-icon">💼</span> Agencias digitales
+                        </button>
+                        <button class="tab-button" data-tab-button="freelance">
+                            <span class="tab-icon">👤</span> Freelance y autonomos
+                        </button>
+                    </div>
+
+                    <div class="tab-panel active" data-tab-panel="reformas">
+                        <div class="panel-grid">
+                            <div>
+                                <div class="panel-icon">🛠</div>
+                                <h3>Control total de obra</h3>
+                                <p>
+                                    Controla a tus clientes, materiales y obreros en un solo lugar. JL Marlo Renovation ya no pierde presupuestos.
+                                </p>
+                                <ul>
+                                    <li>Plantilla pre-disenada incluida</li>
+                                    <li>Automatizaciones listas para usar</li>
+                                    <li>Exportacion a PDF en un clic</li>
+                                </ul>
+                                <button class="link-button">Ver plantilla de Reformas →</button>
+                            </div>
+                            <div class="panel-mockup">
+                                <div class="mockup-browser">
+                                    <div class="mockup-bar">
+                                        <span class="dot red"></span>
+                                        <span class="dot yellow"></span>
+                                        <span class="dot green"></span>
+                                        <div class="mockup-url">Presupuestos 2024</div>
+                                    </div>
+                                    <div class="mockup-table">
+                                        <div class="mockup-toolbar">
+                                            <div class="title">📊 Presupuestos 2024</div>
+                                            <div class="tabs">
+                                                <span class="tab active">Activos</span>
+                                                <span class="tab">Prioridad</span>
+                                                <span class="tab">Calendario</span>
+                                            </div>
+                                        </div>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Cliente</th>
+                                                    <th>Total (€)</th>
+                                                    <th>Estado</th>
+                                                    <th>Entrega</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td><span class="rel">Casa Verde</span></td>
+                                                    <td>12,500</td>
+                                                    <td><span class="chip chip-green">Aprobado</span></td>
+                                                    <td>15 Oct</td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td><span class="rel">Oficina Central</span></td>
+                                                    <td>45,200</td>
+                                                    <td><span class="chip chip-blue">En Curso</span></td>
+                                                    <td>01 Nov</td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td><span class="rel">Atico Centro</span></td>
+                                                    <td>8,150</td>
+                                                    <td><span class="chip chip-gray">Pendiente</span></td>
+                                                    <td>20 Nov</td>
+                                                    <td></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="mockup-footer">3 registros</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" data-tab-panel="agencias">
+                        <div class="panel-grid">
+                            <div>
+                                <div class="panel-icon">💼</div>
+                                <h3>Campanas sin caos</h3>
+                                <p>
+                                    Gestiona multiples clientes y campanas simultaneamente. Asigna tareas creativas y sigue el progreso en tiempo real.
+                                </p>
+                                <ul>
+                                    <li>Plantilla pre-disenada incluida</li>
+                                    <li>Automatizaciones listas para usar</li>
+                                    <li>Exportacion a PDF en un clic</li>
+                                </ul>
+                                <button class="link-button">Ver plantilla de Agencias →</button>
+                            </div>
+                            <div class="panel-mockup">
+                                <div class="mockup-browser">
+                                    <div class="mockup-bar">
+                                        <span class="dot red"></span>
+                                        <span class="dot yellow"></span>
+                                        <span class="dot green"></span>
+                                        <div class="mockup-url">Campanas Q4</div>
+                                    </div>
+                                    <div class="mockup-table">
+                                        <div class="mockup-toolbar">
+                                            <div class="title">📊 Campanas Q4</div>
+                                            <div class="tabs">
+                                                <span class="tab active">Activos</span>
+                                                <span class="tab">Prioridad</span>
+                                                <span class="tab">Calendario</span>
+                                            </div>
+                                        </div>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Campana</th>
+                                                    <th>Cliente</th>
+                                                    <th>Status</th>
+                                                    <th>Canal</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td>Black Friday</td>
+                                                    <td><span class="rel">Nike Store</span></td>
+                                                    <td><span class="chip chip-blue">En Curso</span></td>
+                                                    <td>Social</td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td>Navidad Promo</td>
+                                                    <td><span class="rel">Zara Home</span></td>
+                                                    <td><span class="chip chip-gray">Pendiente</span></td>
+                                                    <td>Email</td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td>Lanzamiento App</td>
+                                                    <td><span class="rel">TechStart</span></td>
+                                                    <td><span class="chip chip-green">Completado</span></td>
+                                                    <td>Ads</td>
+                                                    <td></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="mockup-footer">3 registros</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-panel" data-tab-panel="freelance">
+                        <div class="panel-grid">
+                            <div>
+                                <div class="panel-icon">👤</div>
+                                <h3>Tu oficina en el bolsillo</h3>
+                                <p>
+                                    Facturas, horas trabajadas y clientes potenciales. Todo lo que necesitas para que no se te escape ni un euro.
+                                </p>
+                                <ul>
+                                    <li>Plantilla pre-disenada incluida</li>
+                                    <li>Automatizaciones listas para usar</li>
+                                    <li>Exportacion a PDF en un clic</li>
+                                </ul>
+                                <button class="link-button">Ver plantilla de Freelance →</button>
+                            </div>
+                            <div class="panel-mockup">
+                                <div class="mockup-browser">
+                                    <div class="mockup-bar">
+                                        <span class="dot red"></span>
+                                        <span class="dot yellow"></span>
+                                        <span class="dot green"></span>
+                                        <div class="mockup-url">Facturacion 2024</div>
+                                    </div>
+                                    <div class="mockup-table">
+                                        <div class="mockup-toolbar">
+                                            <div class="title">📊 Facturacion 2024</div>
+                                            <div class="tabs">
+                                                <span class="tab active">Activos</span>
+                                                <span class="tab">Prioridad</span>
+                                                <span class="tab">Calendario</span>
+                                            </div>
+                                        </div>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Factura #</th>
+                                                    <th>Cliente</th>
+                                                    <th>Importe</th>
+                                                    <th>Cobrado</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td>F-2024-001</td>
+                                                    <td><span class="rel">Acme Corp</span></td>
+                                                    <td>1,200</td>
+                                                    <td><span class="chip chip-green">Completado</span></td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td>F-2024-002</td>
+                                                    <td><span class="rel">Globex</span></td>
+                                                    <td>3,500</td>
+                                                    <td><span class="chip chip-gray">Pendiente</span></td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="check"></span></td>
+                                                    <td>F-2024-003</td>
+                                                    <td><span class="rel">Soylent</span></td>
+                                                    <td>850</td>
+                                                    <td><span class="chip chip-blue">En Curso</span></td>
+                                                    <td></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="mockup-footer">3 registros</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pricing" id="pricing">
+                <div class="container">
+                    <div class="section-head">
+                        <h2>Precios simples y transparentes</h2>
+                        <p>Empieza gratis y escala cuando lo necesites.</p>
+                    </div>
+
+                    <div class="pricing-grid">
+                        <article class="price-card">
+                            <h3>Basico</h3>
+                            <p class="price-desc">Perfecto para empezar a organizar tu caos.</p>
+                            <div class="price">€0 <span>/mes</span></div>
+                            <ul>
+                                <li>1 Espacio de trabajo</li>
+                                <li>Hasta 1,000 registros</li>
+                                <li>Vistas de Tabla y Calendario</li>
+                                <li>Soporte por email</li>
+                            </ul>
+                            <button class="btn btn-outline">Empezar gratis</button>
+                        </article>
+
+                        <article class="price-card highlight">
+                            <div class="badge">RECOMENDADO</div>
+                            <h3>Pro</h3>
+                            <p class="price-desc">Para equipos que necesitan potencia ilimitada.</p>
+                            <div class="price">€29 <span>/mes</span></div>
+                            <ul>
+                                <li>Espacios ilimitados</li>
+                                <li>Registros ilimitados</li>
+                                <li>Automatizaciones avanzadas</li>
+                                <li>Roles y permisos granulares</li>
+                                <li>Soporte prioritario 24/7</li>
+                                <li>Backups diarios</li>
+                            </ul>
+                            <button class="btn btn-primary">Prueba gratuita de 14 dias</button>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="cta">
+                <div class="cta-bg"></div>
+                <div class="container cta-inner">
+                    <h2>Listo para tomar el control de tus datos?</h2>
+                    <p>
+                        Unete a las empresas que ya han dejado atras las hojas de calculo.
+                        Sin tarjeta de credito requerida.
+                    </p>
+                    <button class="btn btn-light btn-lg">Empezar ahora gratis</button>
+                    <span class="cta-note">14 dias de prueba en el plan Pro. Cancela cuando quieras.</span>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <div class="container footer-grid">
+                <div class="footer-brand">
+                    <a class="brand" href="#top">
+                        <img src="~/img/logo.png" alt="Logo Syncro" style="height: 60px; width: auto;" />
+                    </a>
+                    <p>
+                        La plataforma flexible para construir las herramientas que tu negocio necesita.
+                        Sin codigo, sin complicaciones.
+                    </p>
+                </div>
+                <div>
+                    <h4>Producto</h4>
+                    <a href="#features">Caracteristicas</a>
+                    <a href="#pricing">Precios</a>
+                    <a href="#use-cases">Casos de uso</a>
+                    <a href="#">Roadmap</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Aviso legal</a>
+                    <a href="#">Privacidad</a>
+                    <a href="#">Cookies</a>
+                    <a href="#">Terminos</a>
+                </div>
+            </div>
+            <div class="footer-bottom">© 2026 Syncro. Todos los derechos reservados.</div>
+        </footer>
+    </div>
+
+    <script>
+        const toggle = document.querySelector('[data-menu-toggle]');
+        const mobileMenu = document.querySelector('[data-mobile-menu]');
+
+        if (toggle && mobileMenu) {
+          toggle.addEventListener('click', () => {
+            const isOpen = mobileMenu.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+
+        const tabButtons = document.querySelectorAll('[data-tab-button]');
+        const tabPanels = document.querySelectorAll('[data-tab-panel]');
+
+        tabButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            const target = button.getAttribute('data-tab-button');
+            tabButtons.forEach((btn) => btn.classList.remove('active'));
+            tabPanels.forEach((panel) => panel.classList.remove('active'));
+            button.classList.add('active');
+            const activePanel = document.querySelector(`[data-tab-panel="${target}"]`);
+            if (activePanel) {
+              activePanel.classList.add('active');
+            }
+          });
+        });
+    </script>
+</body>
+</html>
+
