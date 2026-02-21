@@ -15,6 +15,13 @@ namespace ProyectoSyncro.Controllers
             this.repo = repo;
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Create(string nombreTabla)
+        {
+            await this.repo.CreateTablaEmpresaAsync(1, nombreTabla);
+            return RedirectToAction("Index", "Dashboard", new { tabla = nombreTabla });
+        }
+
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             List<string> tablas = await this.repo.GetTablasEmpresaAsync(1);

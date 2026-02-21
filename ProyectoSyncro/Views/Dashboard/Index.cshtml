@@ -328,7 +328,7 @@
             </svg>
             Ordenar
         </button>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" onclick="openRecordModal()" type="button">
             <svg class="icon" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -428,7 +428,7 @@
 
             <h3 style="margin: 0 0 8px; color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif;">Tabla sin datos</h3>
             <p style="margin: 0 0 24px; color: var(--text-muted); max-width: 400px;">Esta tabla está lista pero aún no tiene registros. Empieza añadiendo el primero.</p>
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" onclick="openRecordModal()" type="button">
                 <svg class="icon" viewBox="0 0 24 24">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -438,3 +438,86 @@
         </div>
     }
 </div>
+<div class="modal-overlay" id="newRecordModal">
+    <div class="modal-card">
+        <form method="post" asp-controller="Dashboard" asp-action="CreateRegistro">
+
+            <input type="hidden" name="nombreTabla" value="@ViewData["Title"]" />
+
+            <div class="modal-header">
+                <h3 class="modal-title">Nuevo registro en @ViewData["Title"]</h3>
+                <button type="button" class="modal-close" onclick="closeRecordModal()">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                @{
+                    // Rescatamos las columnas reales que hemos cruzado con el JOIN en el Backend
+                    // CAMBIA "ProyectoSyncro" por el namespace de tu proyecto si es distinto
+                    var definicionColumnas = ViewData["Columnas"] as List<MetaColumna>;
+                }
+
+                @if (definicionColumnas != null && definicionColumnas.Any())
+                {
+                    // Hacemos un bucle por cada columna que exista en la base de datos para esta tabla
+                    foreach (var columna in definicionColumnas)
+                    {
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">@columna.Nombre</label>
+
+                            @if (columna.TipoDato == "Select")
+                            {
+                                <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; cursor: pointer;">
+                                    <option value="">Selecciona una opción...</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="En Curso">En Curso</option>
+                                    <option value="Completado">Completado</option>
+                                </select>
+                            }
+                            else if (columna.TipoDato == "Relacion")
+                            {
+                                <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
+                                    <option value="">Vincular registro...</option>
+                                    <option value="1">Registro 1</option>
+                                </select>
+                            }
+                            else if (columna.TipoDato == "Fecha")
+                            {
+                                <input type="date" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                            }
+                            else
+                            {
+                                <input type="text" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+                        <p>Aún no hay columnas configuradas para esta tabla.</p>
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeRecordModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Registro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRecordModal() {
+        document.getElementById('newRecordModal').classList.add('active');
+    }
+
+    function closeRecordModal() {
+        document.getElementById('newRecordModal').classList.remove('active');
+    }
+</script>
