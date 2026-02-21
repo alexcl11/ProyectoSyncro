@@ -72,5 +72,21 @@ namespace ProyectoSyncro.Controllers
 
             return RedirectToAction("Index", new { tabla = nombreTabla });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCelda(string nombreTabla, int idFila, string columna, string valor)
+        {
+            int idEmpresa = 1; // Tu ID fijo de momento
+
+            try
+            {
+                await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
+                return Ok(); // Devuelve un código 200 (Éxito) al Javascript
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message); // Si falla, le avisamos al Javascript
+            }
+        }
     }
 }

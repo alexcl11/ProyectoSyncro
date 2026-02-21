@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using ProyectoSyncro.Data;
 using ProyectoSyncro.Models;
 using System.Data.Common;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 
@@ -190,19 +191,48 @@ namespace ProyectoSyncro.Repositories
         public async Task InsertRegistroTablaEmpresaAsync
             (int idEmpresa, string nombreTabla, Dictionary<string, string> valores)
         {
-            string jsonData = JsonSerializer.Serialize(valores);
+            var valoresLimpios = new Dictionary<string, string>();
+
+            foreach (var valor in valores)
+            {
+                // Solo procesamos los que no vengan vacíos
+                if (!string.IsNullOrEmpty(valor.Value))
+                {
+                    // Intentamos ver si es una fecha que viene del input HTML ("yyyy-MM-dd")
+                    if (DateTime.TryParseExact
+                        (valor.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fechaConvertida))
+                    {
+                        // Si es fecha, la guardamos en el formato universal irrompible para SQL
+                        valoresLimpios.Add(valor.Key, fechaConvertida.ToString("yyyy-MM-ddTHH:mm:ss"));
+                    }
+                    else
+                    {
+                        // Si es un texto o número normal, lo guardamos tal cual
+                        valoresLimpios.Add(valor.Key, valor.Value);
+                    }
+                }
+            }
+
+            if (valoresLimpios.Count == 0) 
+            {
+                return; 
+            }
+
+            string jsonData = JsonSerializer.Serialize(valoresLimpios);
+
             string sql = "SP_INSERT_ROW_DINAMICO";
             SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
             SqlParameter paramNombreTabla = new SqlParameter("@NombreTabla", nombreTabla);
             SqlParameter paramJsonData = new SqlParameter("@JsonData", jsonData);
-            using (DbCommand com =
-                this.context.Database.GetDbConnection().CreateCommand())
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
             {
                 com.CommandType = System.Data.CommandType.StoredProcedure;
                 com.CommandText = sql;
                 com.Parameters.Add(paramIdEmpresa);
                 com.Parameters.Add(paramNombreTabla);
                 com.Parameters.Add(paramJsonData);
+
                 await com.Connection.OpenAsync();
                 await com.ExecuteNonQueryAsync();
                 await com.Connection.CloseAsync();
@@ -316,6 +346,28 @@ namespace ProyectoSyncro.Repositories
             }
             
             return opcionesRelacion;
+        }
+
+        public async Task UpdateCeldaAsync(int idEmpresa, string nombreTabla, int idFila, string columna, string valor)
+        {
+            using (var com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = "SP_UPDATE_ROW_DINAMICO"; // ¡Este SP ya lo tienes creado!
+
+                com.Parameters.Add(new SqlParameter("@IdEmpresa", idEmpresa));
+                com.Parameters.Add(new SqlParameter("@NombreTabla", nombreTabla));
+                com.Parameters.Add(new SqlParameter("@IdFila", idFila));
+                com.Parameters.Add(new SqlParameter("@Columna", columna));
+                com.Parameters.Add(new SqlParameter("@Valor", valor));
+
+                if (com.Connection.State != System.Data.ConnectionState.Open)
+                {
+                    await com.Connection.OpenAsync();
+                }
+
+                await com.ExecuteNonQueryAsync();
+            }
         }
 
     }

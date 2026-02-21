@@ -429,7 +429,7 @@
                                 // 2. Buscamos la definición de esta columna para saber si es Relación, Select, etc.
                                 var colDef = definicionColumnas?.FirstOrDefault(c => c.Nombre == nombreColumna);
 
-                                // 3. LA MAGIA DE LAS RELACIONES
+                                // 3.  LAS RELACIONES
                                 if (colDef != null && colDef.TipoDato == "Relacion" && valor != null)
                                 {
                                     string idValor = valor.ToString();
@@ -476,7 +476,27 @@
                                 {
                                     <td title="@fecha.ToLongDateString()">@fecha.ToShortDateString()</td>
                                 }
-                                // 6. TEXTOS Y NÚMEROS NORMALES
+                                // 6. CASILLAS SÍ/NO (Booleanos)
+                                else if (colDef != null && colDef.TipoDato == "SiNo")
+                                {
+                                    bool isChecked = false;
+                                    if (valor != null)
+                                    {
+                                        // Comprobamos si es true o 1
+                                        if (valor is bool bVal) isChecked = bVal;
+                                        else if (valor.ToString() == "True" || valor.ToString() == "1") isChecked = true;
+                                    }
+
+                                    // Necesitamos el ID de esta fila para saber qué registro actualizar
+                                    string idFila = fila.ContainsKey("Id") ? fila["Id"].ToString() : "0";
+
+                                    <td>
+                                        <input type="checkbox"
+                                               @(isChecked ? "checked" : "")
+                                               onchange="actualizarSiNo('@ViewData["Title"]', @idFila, '@nombreColumna', this.checked)">
+                                    </td>
+                                }
+                                // 7. TEXTOS Y NÚMEROS NORMALES
                                 else
                                 {
                                     <td title="@valor">@(valor != null ? valor.ToString() : "")</td>
@@ -713,5 +733,31 @@
 
     function eliminarOpcion(btn) {
         btn.parentElement.remove();
+    }
+
+    // Función para actualizar celdas Sí/No automáticamente
+    function actualizarSiNo(tabla, idFila, columna, estaMarcado) {
+        // SQL Server espera un '1' para True o '0' para False en campos BIT
+        var valorSql = estaMarcado ? "1" : "0";
+
+        // Creamos un formulario virtual (FormData) para enviarlo al Controlador
+        var formData = new FormData();
+        formData.append('nombreTabla', tabla);
+        formData.append('idFila', idFila);
+        formData.append('columna', columna);
+        formData.append('valor', valorSql);
+
+        // Enviamos la petición por POST de forma invisible
+        fetch('/Dashboard/UpdateCelda', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                alert("Error al guardar el cambio.");
+            }
+            // Si todo va bien, no hacemos nada, la casilla ya está marcada en la pantalla
+        })
+        .catch(error => console.error('Error:', error));
     }
 </script>
