@@ -1,5 +1,11 @@
 ﻿
 @model List<Dictionary<string, object>>
+@{
+    var definicionColumnas = ViewData["Columnas"] as List<MetaColumna>;
+    var opcionesSelect = ViewData["OpcionesSelect"] as Dictionary<string, List<MetaOpcione>>;
+    var opcionesRelacion = ViewData["OpcionesRelacion"] as Dictionary<string, Dictionary<string, string>>;
+    var tablas = ViewData["TablasEmpresa"] as List<string>;
+}
 
 <style>
     /* Estilos específicos para la vista de la tabla */
@@ -346,23 +352,34 @@
         var primeraFila = Model.First();
 
         // Función local para elegir el icono SVG según el tipo de dato C#
-        string GetIconoPorTipo(object valorEjemplo)
+        string GetIconoPorTipoDato(string tipoDato)
         {
-            if (valorEjemplo is DateTime)
+            if (tipoDato == "Select")
+            {
+                // Icono Lista/Desplegable (Select)
+                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='8' y1='6' x2='21' y2='6'></line><line x1='8' y1='12' x2='21' y2='12'></line><line x1='8' y1='18' x2='21' y2='18'></line><line x1='3' y1='6' x2='3.01' y2='6'></line><line x1='3' y1='12' x2='3.01' y2='12'></line><line x1='3' y1='18' x2='3.01' y2='18'></line></svg>";
+            }
+            if (tipoDato == "Relacion")
+            {
+                // Icono Vínculo/Enlace (Relación)
+                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'></path><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'></path></svg>";
+            }
+            if (tipoDato == "Fecha")
             {
                 // Icono Calendario (Fecha)
                 return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'></rect><line x1='16' y1='2' x2='16' y2='6'></line><line x1='8' y1='2' x2='8' y2='6'></line><line x1='3' y1='10' x2='21' y2='10'></line></svg>";
             }
-            if (valorEjemplo is int || valorEjemplo is long || valorEjemplo is decimal || valorEjemplo is double || valorEjemplo is float)
+            if (tipoDato == "Numero" || tipoDato == "Decimal")
             {
                 // Icono Numeral (Número)
                 return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='4' y1='9' x2='20' y2='9'></line><line x1='4' y1='15' x2='20' y2='15'></line><line x1='10' y1='3' x2='8' y2='21'></line><line x1='16' y1='3' x2='14' y2='21'></line></svg>";
             }
-            if (valorEjemplo is bool)
+            if (tipoDato == "SiNo")
             {
-                // Icono Check (Booleano/Si-No)
+                // Icono Check (Booleano)
                 return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 11 12 14 22 4'></polyline><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'></path></svg>";
             }
+
             // Por defecto: Icono Texto (Aa)
             return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M4 7V4h16v3'></path><path d='M9 20h6'></path><line x1='12' y1='4' x2='12' y2='20'></line></svg>";
         }
@@ -373,20 +390,27 @@
                 <tr>
                     <th class="col-checkbox"><input type="checkbox"></th>
 
-                    @foreach (var nombreColumna in primeraFila.Keys)
-                    {
-                        // Sacamos el valor de ejemplo para ver su tipo
-                        var valorEjemplo = primeraFila[nombreColumna];
-                        // Obtenemos el SVG correspondiente
-                        string iconoSvg = GetIconoPorTipo(valorEjemplo);
+                        @foreach (var nombreColumna in primeraFila.Keys)
+                        {
+                            if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
+                            {
+                                // 1. Buscamos la definición oficial de esta columna en tu base de datos
+                                var colDef = definicionColumnas?.FirstOrDefault(c => c.Nombre == nombreColumna);
 
-                        <th>
-                            <div class="th-content">
-                                @Html.Raw(iconoSvg)
-                                @nombreColumna
-                            </div>
-                        </th>
-                    }
+                                // 2. Si no la encuentra (raro), asumimos "Texto" por defecto
+                                string tipoDatoReal = colDef != null ? colDef.TipoDato : "Texto";
+
+                                // 3. Obtenemos el SVG correspondiente a su tipo oficial
+                                string iconoSvg = GetIconoPorTipoDato(tipoDatoReal);
+
+                                <th>
+                                    <div class="th-content">
+                                        @Html.Raw(iconoSvg)
+                                        @nombreColumna
+                                    </div>
+                                </th>
+                            }
+                        }
                 </tr>
             </thead>
             <tbody>
@@ -395,19 +419,70 @@
                     <tr>
                         <td class="col-checkbox"><input type="checkbox"></td>
 
-                        @foreach (var valor in fila.Values)
+                        @foreach (var nombreColumna in fila.Keys)
                         {
-                            // Pintamos el dato, formateando si es fecha
-                            if (valor is DateTime fecha)
+                            if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
                             {
-                                // Formato corto para fechas (ej: 25/10/2026)
-                                <td title="@fecha.ToLongDateString()">@fecha.ToShortDateString()</td>
+                                
+                                var valor = fila[nombreColumna];
+
+                                // 2. Buscamos la definición de esta columna para saber si es Relación, Select, etc.
+                                var colDef = definicionColumnas?.FirstOrDefault(c => c.Nombre == nombreColumna);
+
+                                // 3. LA MAGIA DE LAS RELACIONES
+                                if (colDef != null && colDef.TipoDato == "Relacion" && valor != null)
+                                {
+                                    string idValor = valor.ToString();
+                                    string textoAMostrar = idValor; // Por defecto enseñamos el ID por si algo falla
+
+                                    // Si tenemos el diccionario y contiene este ID, sacamos el Nombre real
+                                    if (opcionesRelacion != null &&
+                                    opcionesRelacion.ContainsKey(nombreColumna) &&
+                                    opcionesRelacion[nombreColumna].ContainsKey(idValor))
+                                    {
+                                        textoAMostrar = opcionesRelacion[nombreColumna][idValor];
+                                    }
+
+                                    // Pintamos el nombre real con el estilo de enlace que hicimos en el CSS
+                                    <td title="@textoAMostrar">
+                                        <span class="cell-relation">@textoAMostrar</span>
+                                    </td>
+                                }
+                                else if (colDef != null && colDef.TipoDato == "Select" && valor != null)
+                                {
+                                    string textoValor = valor.ToString();
+                                    string colorFondo = "#64748b"; // Un gris por defecto por si acaso
+
+                                    // Buscamos esta opción exacta en nuestro diccionario mágico
+                                    if (opcionesSelect != null && opcionesSelect.ContainsKey(nombreColumna))
+                                    {
+                                        var opcionEncontrada = opcionesSelect[nombreColumna].FirstOrDefault(o => o.Valor == textoValor);
+
+                                        // Si la encontramos y tiene un color guardado (ej: "#ff0000"), lo usamos
+                                        if (opcionEncontrada != null && !string.IsNullOrEmpty(opcionEncontrada.Color))
+                                        {
+                                            colorFondo = opcionEncontrada.Color;
+                                        }
+                                    }
+
+                                    <td title="@textoValor">
+                                        <span class="chip" style="background-color: @colorFondo; color: #ffffff; border: none;">
+                                            @textoValor
+                                        </span>
+                                    </td>
+                                }
+                                // 5. FECHAS
+                                else if (valor is DateTime fecha)
+                                {
+                                    <td title="@fecha.ToLongDateString()">@fecha.ToShortDateString()</td>
+                                }
+                                // 6. TEXTOS Y NÚMEROS NORMALES
+                                else
+                                {
+                                    <td title="@valor">@(valor != null ? valor.ToString() : "")</td>
+                                }
                             }
-                            else
-                            {
-                                // El atributo 'title' muestra el texto completo al pasar el ratón si se ha cortado con "..."
-                                <td title="@valor">@(valor != null ? valor.ToString() : "")</td>
-                            }
+
                         }
                     </tr>
                 }
@@ -455,34 +530,39 @@
             </div>
 
             <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-                @{
-                    // Rescatamos las columnas reales que hemos cruzado con el JOIN en el Backend
-                    // CAMBIA "ProyectoSyncro" por el namespace de tu proyecto si es distinto
-                    var definicionColumnas = ViewData["Columnas"] as List<MetaColumna>;
-                }
+                
 
                 @if (definicionColumnas != null && definicionColumnas.Any())
                 {
-                    // Hacemos un bucle por cada columna que exista en la base de datos para esta tabla
                     foreach (var columna in definicionColumnas)
                     {
                         <div class="form-group" style="margin-bottom: 16px;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">@columna.Nombre</label>
-
                             @if (columna.TipoDato == "Select")
                             {
-                                <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; cursor: pointer;">
-                                    <option value="">Selecciona una opción...</option>
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="En Curso">En Curso</option>
-                                    <option value="Completado">Completado</option>
+                                <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
+                            
+                                    @if (opcionesSelect != null && opcionesSelect.ContainsKey(columna.Nombre))
+                                    {
+                                        foreach (var opcion in opcionesSelect[columna.Nombre])
+                                        {
+                                            <option value="@opcion.Valor">@opcion.Valor</option>
+                                        }
+                                    }
                                 </select>
                             }
                             else if (columna.TipoDato == "Relacion")
                             {
                                 <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
                                     <option value="">Vincular registro...</option>
-                                    <option value="1">Registro 1</option>
+
+                                    @if (opcionesRelacion != null && opcionesRelacion.ContainsKey(columna.Nombre))
+                                    {
+                                        foreach (var relacion in opcionesRelacion[columna.Nombre])
+                                        {
+                                            <option value="@relacion.Key">@relacion.Value</option>
+                                        }
+                                    }
                                 </select>
                             }
                             else if (columna.TipoDato == "Fecha")
@@ -519,5 +599,119 @@
 
     function closeRecordModal() {
         document.getElementById('newRecordModal').classList.remove('active');
+    }
+</script>
+<div class="modal-overlay" id="newColumnModal">
+    <div class="modal-card">
+        <form method="post" asp-controller="Dashboard" asp-action="CreateColumn">
+
+            <input type="hidden" name="nombreTabla" value="@ViewData["Title"]" />
+
+            <div class="modal-header">
+                <h3 class="modal-title">Añadir columna a @ViewData["Title"]</h3>
+                <button type="button" class="modal-close" onclick="closeColumnModal()">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Nombre de la columna</label>
+                    <input type="text" name="nombreColumna" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;" placeholder="Ej: Teléfono, Fecha de Entrega..." required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Tipo de Dato</label>
+                    <select name="tipoDato" id="selectTipoDato" class="form-control" onchange="toggleCamposDinamicos()" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; cursor: pointer;" required>
+                        <option value="Texto">Texto corto</option>
+                        <option value="Numero">Número entero</option>
+                        <option value="Decimal">Número decimal</option>
+                        <option value="Fecha">Fecha</option>
+                        <option value="SiNo">Casilla (Sí/No)</option>
+                        <option value="Select">Desplegable (Opciones)</option>
+                        <option value="Relacion">Vincular con otra tabla</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="divRelacion" style="display: none; padding: 16px; background: #eef2ff; border-radius: 12px; border: 1px dashed #c7d2fe;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--brand); margin-bottom: 8px;">¿A qué tabla quieres apuntar?</label>
+                    <select name="nombreTablaRelacionada" class="form-control" style="width: 100%; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 8px;">
+                        <option value="">Selecciona una tabla...</option>
+
+                        
+                        @if (tablas != null)
+                        {
+                            foreach (string t in tablas)
+                            {
+                                <option>@t</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group" id="divOpcionesSelect" style="display: none; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--border);">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">Configurar opciones</label>
+
+                    <div id="opcionesContainer">
+                        <div class="opcion-row" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" name="opcionesValor" class="form-control" placeholder="Ej: En Curso" style="flex: 1; margin: 0;">
+                            <input type="color" name="opcionesColor" class="form-control" value="#3b82f6" style="width: 50px; padding: 2px; height: 38px; cursor: pointer;" title="Color de etiqueta">
+                            <button type="button" class="btn btn-outline" onclick="eliminarOpcion(this)" style="padding: 8px 12px; margin: 0; color: #dc2626;">✕</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline" onclick="agregarOpcion()" style="width: 100%; margin-top: 8px; border-style: dashed;">+ Añadir otra opción</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeColumnModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Crear Columna</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Mostrar el modal
+    function openColumnModal() {
+        document.getElementById('newColumnModal').classList.add('active');
+    }
+
+    // Ocultar el modal
+    function closeColumnModal() {
+        document.getElementById('newColumnModal').classList.remove('active');
+    }
+
+        // Mostrar/Ocultar bloques según el tipo elegido
+    function toggleCamposDinamicos() {
+        var tipo = document.getElementById('selectTipoDato').value;
+
+        document.getElementById('divRelacion').style.display = (tipo === 'Relacion') ? 'block' : 'none';
+        document.getElementById('divOpcionesSelect').style.display = (tipo === 'Select') ? 'block' : 'none';
+    }
+
+    function agregarOpcion() {
+        var container = document.getElementById('opcionesContainer');
+        var row = document.createElement('div');
+        row.className = 'opcion-row';
+        row.style = 'display: flex; gap: 8px; margin-bottom: 8px;';
+
+        var colores = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+        var colorRandom = colores[Math.floor(Math.random() * colores.length)];
+
+        row.innerHTML = `
+            <input type="text" name="opcionesValor" class="form-control" placeholder="Nueva opción..." style="flex: 1; margin: 0;">
+            <input type="color" name="opcionesColor" class="form-control" value="${colorRandom}" style="width: 50px; padding: 2px; height: 38px; cursor: pointer;">
+            <button type="button" class="btn btn-outline" onclick="eliminarOpcion(this)" style="padding: 8px 12px; margin: 0; color: #dc2626;">✕</button>
+        `;
+        container.appendChild(row);
+    }
+
+    function eliminarOpcion(btn) {
+        btn.parentElement.remove();
     }
 </script>
