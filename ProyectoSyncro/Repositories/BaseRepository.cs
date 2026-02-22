@@ -104,7 +104,7 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
-        public async Task CreateColumnaTabla
+        public async Task CreateColumnaTablaAsync
             (int idEmpresa, string nombreTabla, string nombreColumna, 
             string tipoDato, string? nombreTablaRelacionada)
         {
@@ -205,6 +205,17 @@ namespace ProyectoSyncro.Repositories
                         // Si es fecha, la guardamos en el formato universal irrompible para SQL
                         valoresLimpios.Add(valor.Key, fechaConvertida.ToString("yyyy-MM-ddTHH:mm:ss"));
                     }
+                    else if (valor.Value == "on" || valor.Value == "off")
+                    {
+                        if (valor.Value == "on")
+                        {
+                            valoresLimpios.Add(valor.Key, "1");
+                        }
+                        else
+                        {
+                            valoresLimpios.Add(valor.Key, "0");
+                        }
+                    }
                     else
                     {
                         // Si es un texto o número normal, lo guardamos tal cual
@@ -239,7 +250,7 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
-        public async Task<Dictionary<string, List<MetaOpcione>>> GetOpcionesSelectTablaEmpresa
+        public async Task<Dictionary<string, List<MetaOpcione>>> GetOpcionesSelectTablaEmpresaAsync
             (int idEmpresa, string nombreTabla)
         {
             Dictionary<string, List<MetaOpcione>> opciones = new Dictionary<string, List<MetaOpcione>>();
@@ -277,7 +288,7 @@ namespace ProyectoSyncro.Repositories
 
         }
 
-        public async Task<Dictionary<string, Dictionary<string, string>>> GetOpcionesRelacionTablaEmpresa(int idEmpresa, string nombreTabla)
+        public async Task<Dictionary<string, Dictionary<string, string>>> GetOpcionesRelacionTablaEmpresaAsync(int idEmpresa, string nombreTabla)
         {
             var opcionesRelacion = new Dictionary<string, Dictionary<string, string>>();
 
@@ -350,23 +361,52 @@ namespace ProyectoSyncro.Repositories
 
         public async Task UpdateCeldaAsync(int idEmpresa, string nombreTabla, int idFila, string columna, string valor)
         {
+
+            string sql = "SP_UPDATE_ROW_DINAMICO";
+
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@NombreTabla", nombreTabla);
+            SqlParameter paramIdFila = new SqlParameter("@IdFila", idFila);
+            SqlParameter paramColumna = new SqlParameter("@Columna", columna);
+            SqlParameter paramValor = new SqlParameter("@Valor", valor);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+                com.Parameters.Add(paramIdFila);
+                com.Parameters.Add(paramColumna);
+                com.Parameters.Add(paramValor);
+
+                
+                await com.Connection.OpenAsync();           
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
+
+        public async Task DeleteRegistrosAsync(int idEmpresa, string nombreTabla, List<int> idsFilas)
+        {
+            string idsFormateados = string.Join(",", idsFilas);
+            string sql = "SP_DELETE_ROWS_MULTIPLE_DINAMICO"; 
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@NombreTabla", nombreTabla);
+            SqlParameter paramIdsFilas = new SqlParameter("@IdsFilas", idsFormateados);
             using (var com = this.context.Database.GetDbConnection().CreateCommand())
             {
                 com.CommandType = System.Data.CommandType.StoredProcedure;
-                com.CommandText = "SP_UPDATE_ROW_DINAMICO"; // ¡Este SP ya lo tienes creado!
+                com.CommandText = sql;
 
-                com.Parameters.Add(new SqlParameter("@IdEmpresa", idEmpresa));
-                com.Parameters.Add(new SqlParameter("@NombreTabla", nombreTabla));
-                com.Parameters.Add(new SqlParameter("@IdFila", idFila));
-                com.Parameters.Add(new SqlParameter("@Columna", columna));
-                com.Parameters.Add(new SqlParameter("@Valor", valor));
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+                com.Parameters.Add(paramIdsFilas);
 
-                if (com.Connection.State != System.Data.ConnectionState.Open)
-                {
-                    await com.Connection.OpenAsync();
-                }
-
+                await com.Connection.OpenAsync();
                 await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
             }
         }
 

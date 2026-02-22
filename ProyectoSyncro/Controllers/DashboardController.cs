@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
 
@@ -15,14 +16,15 @@ namespace ProyectoSyncro.Controllers
         public async Task<IActionResult> Index(string tabla)
         {
             int idEmpresa = 1;
-            if (tabla != null)
+            List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+            if (tabla != null && tablas.Contains(tabla))
             {
                 List<Dictionary<string, object>> datos = 
                     await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla);
                 var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
-                var opciones = await this.repo.GetOpcionesSelectTablaEmpresa(idEmpresa, tabla);
-                var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresa(idEmpresa, tabla);
-                List<string> tablas = await this.repo.GetTablasEmpresaAsync(1);
+                var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
+                var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
+                
 
                 ViewData["TablasEmpresa"] = tablas;
                 ViewData["Title"] = tabla;
@@ -44,7 +46,7 @@ namespace ProyectoSyncro.Controllers
         {
             int idEmpresa = 1;
 
-            await this.repo.CreateColumnaTabla(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
+            await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
 
             if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
             {
@@ -76,16 +78,41 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateCelda(string nombreTabla, int idFila, string columna, string valor)
         {
-            int idEmpresa = 1; // Tu ID fijo de momento
+            int idEmpresa = 1; 
 
             try
             {
                 await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
-                return Ok(); // Devuelve un código 200 (Éxito) al Javascript
+                return Ok();
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message); // Si falla, le avisamos al Javascript
+                return BadRequest(ex.Message); 
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteRegistros(string nombreTabla, List<int> idsFilas)
+        {
+            int idEmpresa = 1;
+
+            try
+            {
+                if (idsFilas != null && idsFilas.Any())
+                {
+                    await this.repo.DeleteRegistrosAsync(idEmpresa, nombreTabla, idsFilas);
+                }
+
+                return Ok();
+            }
+            catch (SqlException ex) when (ex.Number == 547)
+            {
+                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
             }
         }
     }

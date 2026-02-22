@@ -7,291 +7,6 @@
     var tablas = ViewData["TablasEmpresa"] as List<string>;
 }
 
-<style>
-    /* Estilos específicos para la vista de la tabla */
-    .table-toolbar {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 24px;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 14px;
-    }
-
-    .view-tabs {
-        display: flex;
-        gap: 8px;
-        background: #f1f5f9;
-        padding: 6px;
-        border-radius: 12px;
-    }
-
-    .view-tab {
-        padding: 6px 14px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        cursor: pointer;
-        border-radius: 8px;
-        transition: all 0.2s;
-    }
-
-        .view-tab.active {
-            background: #fff;
-            color: var(--brand);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-        }
-
-    .data-table-container {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        overflow-x: auto;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-        font-size: 0.9rem;
-    }
-
-        .data-table th, .data-table td {
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .data-table th {
-            background: #f8fafc;
-            font-weight: 700;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            white-space: nowrap;
-        }
-
-        .data-table tbody tr {
-            transition: background 0.1s;
-        }
-
-            .data-table tbody tr:hover {
-                background: #f8fafc;
-            }
-
-            .data-table tbody tr:last-child td {
-                border-bottom: none;
-            }
-
-    /* Los famosos "Pills" o etiquetas de estados */
-    .chip {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-
-    .chip-blue {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .chip-green {
-        background: #dcfce7;
-        color: #15803d;
-    }
-
-    .chip-orange {
-        background: #ffedd5;
-        color: #c2410c;
-    }
-
-    .chip-gray {
-        background: #f1f5f9;
-        color: #475569;
-    }
-
-    /* Estilo para las columnas que son Relaciones con otras tablas */
-    .cell-relation {
-        color: var(--brand);
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: underline;
-        text-decoration-color: #cbd5e1;
-        text-underline-offset: 4px;
-    }
-
-        .cell-relation:hover {
-            text-decoration-color: var(--brand);
-        }
-    /* Añade esto a tus estilos existentes */
-    .view-tab, .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px; /* Separación entre el icono y el texto */
-    }
-
-    /* Tamaño estándar para los iconos */
-    .icon {
-        width: 16px;
-        height: 16px;
-        stroke: currentColor;
-        stroke-width: 2.2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        fill: none;
-    }
-
-    /* --- Estilos existentes de la Toolbar y Tabs --- */
-    .table-toolbar {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 24px;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 14px;
-    }
-
-    .view-tabs {
-        display: flex;
-        gap: 8px;
-        background: #f1f5f9;
-        padding: 6px;
-        border-radius: 12px;
-    }
-
-    .view-tab {
-        padding: 6px 14px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        cursor: pointer;
-        border-radius: 8px;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-        .view-tab.active {
-            background: #fff;
-            color: var(--brand);
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-        }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .icon {
-        width: 16px;
-        height: 16px;
-        stroke: currentColor;
-        stroke-width: 2.2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        fill: none;
-    }
-
-    /* --- NUEVOS ESTILOS DE LA TABLA MEJORADA --- */
-    .data-table-container {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        /* Importante: definimos una altura máxima para que el scroll funcione dentro */
-        max-height: calc(100vh - 220px);
-        overflow: auto;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
-        position: relative;
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: separate; /* Necesario para el sticky header */
-        border-spacing: 0;
-        text-align: left;
-        font-size: 0.9rem;
-    }
-
-        .data-table th {
-            background: #f8fafc;
-            /* Cabecera pegajosa (Sticky Header) */
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            border-bottom: 1px solid var(--border);
-            padding: 12px 20px;
-            font-weight: 600;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            white-space: nowrap;
-        }
-
-    /* Contenedor para el icono y el texto del th */
-    .th-content {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Iconos más pequeñitos y sutiles para las cabeceras */
-    .th-icon {
-        width: 14px;
-        height: 14px;
-        stroke: var(--text-muted);
-        stroke-width: 2;
-        opacity: 0.7;
-    }
-
-    .data-table td {
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--border);
-        color: var(--text-main);
-        /* Truco para cortar texto largo con "..." */
-        max-width: 300px; /* Ancho máximo de celda */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .data-table tbody tr {
-        transition: background 0.1s;
-    }
-
-        .data-table tbody tr:hover {
-            background: #f8fafc;
-        }
-
-        .data-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-    /* Estilo para la columna de checkboxes */
-    .col-checkbox {
-        width: 40px;
-        text-align: center;
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-    }
-
-    input[type="checkbox"] {
-        cursor: pointer;
-        accent-color: var(--brand);
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
-        border: 1px solid var(--border);
-    }
-
-
-</style>
-
 <div class="table-toolbar">
     <div class="view-tabs">
         <div class="view-tab active">
@@ -387,8 +102,24 @@
 
         <table class="data-table">
             <thead>
+                @{
+                    
+                }
                 <tr>
-                    <th class="col-checkbox"><input type="checkbox"></th>
+                    <th class="col-checkbox">
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                            <button type="button" id="btn-delete-all" class="btn-icon-danger" style="display: none;" onclick="getFilasABorrar('@ViewData["Title"]')" title="Eliminar filas seleccionadas">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+
+                            <input id="select-all-checkbox" onchange="selectAllCheckBoxes()" type="checkbox" title="Seleccionar todo">
+                        </div>
+                    </th>
 
                         @foreach (var nombreColumna in primeraFila.Keys)
                         {
@@ -416,9 +147,25 @@
             <tbody>
                 @foreach (var fila in Model)
                 {
-                    <tr>
-                        <td class="col-checkbox"><input type="checkbox"></td>
+                    string idFila = fila.Values.First().ToString();;
+                    <tr>                        
+                        <td class="col-checkbox">
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
 
+                                <button type="button" id="btn-delete-@idFila" class="btn-icon-danger" style="display: none;" onclick="deleteRegistro('@ViewData["Title"]','@idFila')" title="Eliminar fila">
+                                    <svg class="icon" viewBox="0 0 24 24">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+
+                                <input type="checkbox" class="checkbox-fila" id="checkbox-fila-@idFila" value="@idFila" 
+                                onchange="mostrarBotonDelete(this, '@idFila')">
+
+                            </div>
+                        </td>
                         @foreach (var nombreColumna in fila.Keys)
                         {
                             if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
@@ -487,8 +234,7 @@
                                         else if (valor.ToString() == "True" || valor.ToString() == "1") isChecked = true;
                                     }
 
-                                    // Necesitamos el ID de esta fila para saber qué registro actualizar
-                                    string idFila = fila.ContainsKey("Id") ? fila["Id"].ToString() : "0";
+                                    
 
                                     <td>
                                         <input type="checkbox"
@@ -589,6 +335,14 @@
                             {
                                 <input type="date" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
                             }
+                            else if (columna.TipoDato == "SiNo")
+                            {
+                                <input type="checkbox" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 10%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                            }
+                            else if (columna.TipoDato == "Numero")
+                            {
+                                <input type="number" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                            }
                             else
                             {
                                 <input type="text" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
@@ -603,24 +357,18 @@
                     </div>
                 }
             </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeRecordModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar Registro</button>
-            </div>
+                @if (definicionColumnas != null && definicionColumnas.Any())
+                {
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" onclick="closeRecordModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Registro</button>
+                    </div>
+                }
+                
         </form>
     </div>
 </div>
 
-<script>
-    function openRecordModal() {
-        document.getElementById('newRecordModal').classList.add('active');
-    }
-
-    function closeRecordModal() {
-        document.getElementById('newRecordModal').classList.remove('active');
-    }
-</script>
 <div class="modal-overlay" id="newColumnModal">
     <div class="modal-card">
         <form method="post" asp-controller="Dashboard" asp-action="CreateColumn">
@@ -694,70 +442,3 @@
         </form>
     </div>
 </div>
-
-<script>
-    // Mostrar el modal
-    function openColumnModal() {
-        document.getElementById('newColumnModal').classList.add('active');
-    }
-
-    // Ocultar el modal
-    function closeColumnModal() {
-        document.getElementById('newColumnModal').classList.remove('active');
-    }
-
-        // Mostrar/Ocultar bloques según el tipo elegido
-    function toggleCamposDinamicos() {
-        var tipo = document.getElementById('selectTipoDato').value;
-
-        document.getElementById('divRelacion').style.display = (tipo === 'Relacion') ? 'block' : 'none';
-        document.getElementById('divOpcionesSelect').style.display = (tipo === 'Select') ? 'block' : 'none';
-    }
-
-    function agregarOpcion() {
-        var container = document.getElementById('opcionesContainer');
-        var row = document.createElement('div');
-        row.className = 'opcion-row';
-        row.style = 'display: flex; gap: 8px; margin-bottom: 8px;';
-
-        var colores = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
-        var colorRandom = colores[Math.floor(Math.random() * colores.length)];
-
-        row.innerHTML = `
-            <input type="text" name="opcionesValor" class="form-control" placeholder="Nueva opción..." style="flex: 1; margin: 0;">
-            <input type="color" name="opcionesColor" class="form-control" value="${colorRandom}" style="width: 50px; padding: 2px; height: 38px; cursor: pointer;">
-            <button type="button" class="btn btn-outline" onclick="eliminarOpcion(this)" style="padding: 8px 12px; margin: 0; color: #dc2626;">✕</button>
-        `;
-        container.appendChild(row);
-    }
-
-    function eliminarOpcion(btn) {
-        btn.parentElement.remove();
-    }
-
-    // Función para actualizar celdas Sí/No automáticamente
-    function actualizarSiNo(tabla, idFila, columna, estaMarcado) {
-        // SQL Server espera un '1' para True o '0' para False en campos BIT
-        var valorSql = estaMarcado ? "1" : "0";
-
-        // Creamos un formulario virtual (FormData) para enviarlo al Controlador
-        var formData = new FormData();
-        formData.append('nombreTabla', tabla);
-        formData.append('idFila', idFila);
-        formData.append('columna', columna);
-        formData.append('valor', valorSql);
-
-        // Enviamos la petición por POST de forma invisible
-        fetch('/Dashboard/UpdateCelda', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                alert("Error al guardar el cambio.");
-            }
-            // Si todo va bien, no hacemos nada, la casilla ya está marcada en la pantalla
-        })
-        .catch(error => console.error('Error:', error));
-    }
-</script>
