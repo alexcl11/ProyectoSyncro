@@ -202,10 +202,10 @@ function deleteRegistro(nombreTabla, idFila) {
 
             var formData = new FormData();
             formData.append('nombreTabla', nombreTabla);
-            formData.append('idsFilas', idFila);
+            formData.append('idFila', idFila);
 
 
-            return fetch('/Dashboard/DeleteRegistros', {
+            return fetch('/Dashboard/DeleteRegistro', {
                 method: 'POST',
                 body: formData
             })

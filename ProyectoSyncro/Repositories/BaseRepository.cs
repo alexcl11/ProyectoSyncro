@@ -410,5 +410,27 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
+        public async Task DeleteRegistroAsync(int idEmpresa, string nombreTabla, int idFila)
+        {
+            
+            string sql = "SP_DELETE_ROW_DINAMICO";
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@NombreTabla", nombreTabla);
+            SqlParameter paramIdFila = new SqlParameter("@IdFila", idFila);
+            using (var com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+                com.Parameters.Add(paramIdFila);
+
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
+
     }
 }

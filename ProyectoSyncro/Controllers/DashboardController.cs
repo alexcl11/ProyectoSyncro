@@ -115,5 +115,25 @@ namespace ProyectoSyncro.Controllers
                 return BadRequest("Ocurrió un error al intentar eliminar los datos.");
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteRegistro(string nombreTabla, int idFila)
+        {
+            int idEmpresa = 1;
+
+            try
+            {
+                await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);
+                return Ok();
+            }
+            catch (SqlException ex) when (ex.Number == 547)
+            {
+                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
+            }
+        }
     }
 }
