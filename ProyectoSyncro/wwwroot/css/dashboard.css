@@ -597,7 +597,7 @@ input[type="checkbox"] {
 
 /* 1. Al pasar el ratón por una celda editable (excluyendo los checkboxes) */
 .data-table tbody td:not(.col-checkbox) {
-    cursor: cell; /* Cambiamos el cursor para indicar que se puede interactuar */
+    cursor: pointer; /* Cambiamos el cursor para indicar que se puede interactuar */
     transition: all 0.15s ease;
 }
 
