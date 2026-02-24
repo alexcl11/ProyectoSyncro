@@ -592,3 +592,47 @@ input[type="checkbox"] {
     .btn-icon-danger:hover {
         background: #fee2e2;
     }
+
+/* --- ESTILOS DE EDICIÓN EN LÍNEA (Efecto Airtable/Notion) --- */
+
+/* 1. Al pasar el ratón por una celda editable (excluyendo los checkboxes) */
+.data-table tbody td:not(.col-checkbox) {
+    cursor: cell; /* Cambiamos el cursor para indicar que se puede interactuar */
+    transition: all 0.15s ease;
+}
+
+    .data-table tbody td:not(.col-checkbox):hover {
+        background-color: #f8fafc; /* Un gris súper sutil */
+        box-shadow: inset 0 0 0 1px #cbd5e1; /* Un borde interior para resaltar la celda */
+    }
+
+/* 2. Cuando la celda está activa (haciendo clic en ella) */
+.data-table tbody td.editando {
+    padding: 0 !important; /* Quitamos el padding para que el input ocupe el 100% */
+    background-color: #ffffff !important;
+    box-shadow: inset 0 0 0 2px var(--brand) !important; /* Anillo de foco con el color de tu marca */
+    position: relative;
+    z-index: 10;
+}
+
+    /* 3. Estilos limpios para el Input y el Select dinámicos */
+    .data-table tbody td.editando input,
+    .data-table tbody td.editando select {
+        width: 100%;
+        height: 100%;
+        min-height: 48px; /* Debe coincidir con la altura de tus celdas normales */
+        border: none;
+        outline: none;
+        background: transparent;
+        padding: 0 16px; /* Le devolvemos el padding por dentro del input */
+        font-family: inherit;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+        /* Ajuste específico para que la fecha no se pegue demasiado a los bordes */
+        .data-table tbody td.editando input[type="date"] {
+            padding: 0 12px;
+        }

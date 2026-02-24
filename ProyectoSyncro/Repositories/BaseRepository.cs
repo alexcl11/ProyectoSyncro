@@ -364,11 +364,28 @@ namespace ProyectoSyncro.Repositories
 
             string sql = "SP_UPDATE_ROW_DINAMICO";
 
+            object valorFinal;
+
+            if (string.IsNullOrEmpty(valor))
+            {
+                valorFinal = DBNull.Value;
+            }
+            else if (DateTime.TryParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fechaConvertida))
+            {
+                // Si es una fecha del HTML, la convertimos al formato universal irrompible de SQL Server
+                valorFinal = fechaConvertida.ToString("yyyy-MM-ddTHH:mm:ss");
+            }
+            else
+            {
+                // Si es texto, número, o "1"/"0", lo dejamos tal cual
+                valorFinal = valor;
+            }
+
             SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
             SqlParameter paramNombreTabla = new SqlParameter("@NombreTabla", nombreTabla);
             SqlParameter paramIdFila = new SqlParameter("@IdFila", idFila);
             SqlParameter paramColumna = new SqlParameter("@Columna", columna);
-            SqlParameter paramValor = new SqlParameter("@Valor", valor);
+            SqlParameter paramValor = new SqlParameter("@Valor", valorFinal);
 
             using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
             {

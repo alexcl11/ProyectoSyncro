@@ -176,43 +176,55 @@
                                 // 2. Buscamos la definición de esta columna para saber si es Relación, Select, etc.
                                 var colDef = definicionColumnas?.FirstOrDefault(c => c.Nombre == nombreColumna);
 
-                                // 3.  LAS RELACIONES
+                                // 3. LAS RELACIONES
                                 if (colDef != null && colDef.TipoDato == "Relacion" && valor != null)
                                 {
                                     string idValor = valor.ToString();
-                                    string textoAMostrar = idValor; // Por defecto enseñamos el ID por si algo falla
+                                    string textoAMostrar = idValor;
 
-                                    // Si tenemos el diccionario y contiene este ID, sacamos el Nombre real
-                                    if (opcionesRelacion != null &&
-                                    opcionesRelacion.ContainsKey(nombreColumna) &&
-                                    opcionesRelacion[nombreColumna].ContainsKey(idValor))
+                                    // Preparamos las opciones en JSON para el Javascript
+                                    string opcionesJson = "[]";
+
+                                    if (opcionesRelacion != null && opcionesRelacion.ContainsKey(nombreColumna))
                                     {
-                                        textoAMostrar = opcionesRelacion[nombreColumna][idValor];
+                                        if (opcionesRelacion[nombreColumna].ContainsKey(idValor))
+                                        {
+                                            textoAMostrar = opcionesRelacion[nombreColumna][idValor];
+                                        }
+                                        // Empaquetamos el diccionario en un JSON [{"Id":"1", "Valor":"Juan"}, ...]
+                                        var listaOpciones = opcionesRelacion[nombreColumna].Select(k => new { Id = k.Key, Valor = k.Value });
+                                        opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
                                     }
 
-                                    // Pintamos el nombre real con el estilo de enlace que hicimos en el CSS
-                                    <td title="@textoAMostrar">
+                                    
+                                    <td title="@textoAMostrar"
+                                        data-opciones="@opcionesJson"
+                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Relacion', '@idValor', '@ViewData["Title"]')">
                                         <span class="cell-relation">@textoAMostrar</span>
                                     </td>
                                 }
+                                // 4. LOS SELECTS 
                                 else if (colDef != null && colDef.TipoDato == "Select" && valor != null)
                                 {
                                     string textoValor = valor.ToString();
-                                    string colorFondo = "#64748b"; // Un gris por defecto por si acaso
+                                    string colorFondo = "#64748b";
+                                    string opcionesJson = "[]";
 
-                                    // Buscamos esta opción exacta en nuestro diccionario mágico
                                     if (opcionesSelect != null && opcionesSelect.ContainsKey(nombreColumna))
                                     {
                                         var opcionEncontrada = opcionesSelect[nombreColumna].FirstOrDefault(o => o.Valor == textoValor);
-
-                                        // Si la encontramos y tiene un color guardado (ej: "#ff0000"), lo usamos
                                         if (opcionEncontrada != null && !string.IsNullOrEmpty(opcionEncontrada.Color))
                                         {
                                             colorFondo = opcionEncontrada.Color;
                                         }
+                                        // Empaquetamos las opciones [{"Valor":"En Curso", "Color":"#ff0000"}, ...]
+                                        var listaOpciones = opcionesSelect[nombreColumna].Select(o => new { o.Valor, o.Color });
+                                        opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
                                     }
 
-                                    <td title="@textoValor">
+                                    <td title="@textoValor"
+                                        data-opciones="@opcionesJson"
+                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Select', '@textoValor', '@ViewData["Title"]')">
                                         <span class="chip" style="background-color: @colorFondo; color: #ffffff; border: none;">
                                             @textoValor
                                         </span>
@@ -221,7 +233,14 @@
                                 // 5. FECHAS
                                 else if (valor is DateTime fecha)
                                 {
-                                    <td title="@fecha.ToLongDateString()">@fecha.ToShortDateString()</td>
+                                    string fechaFormatoInput = fecha.ToString("yyyy-MM-dd");
+
+                                    <td title="@fecha.ToLongDateString()"
+                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Fecha', '@fechaFormatoInput', '@ViewData["Title"]')">
+
+                                        @fecha.ToString("dd-MM-yyyy")
+
+                                    </td>
                                 }
                                 // 6. CASILLAS SÍ/NO (Booleanos)
                                 else if (colDef != null && colDef.TipoDato == "SiNo")
@@ -245,7 +264,11 @@
                                 // 7. TEXTOS Y NÚMEROS NORMALES
                                 else
                                 {
-                                    <td title="@valor">@(valor != null ? valor.ToString() : "")</td>
+                                    string valorString = valor != null ? valor.ToString() : "";
+                                    <td title="@valorString"
+                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', '@(colDef != null ? colDef.TipoDato : "Texto")', '@valorString', '@ViewData["Title"]')">
+                                        @valorString
+                                    </td>
                                 }
                             }
 

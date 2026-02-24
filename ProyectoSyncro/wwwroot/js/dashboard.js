@@ -169,16 +169,15 @@ function getFilasABorrar(nombreTabla) {
         },
         allowOutsideClick: () => !Swal.isLoading()
     }).then((result) => {
-        // Si C# respondió con un OK y terminó de cargar
+        
         if (result.isConfirmed) {
             Swal.fire({
                 title: '¡Eliminado!',
                 text: 'Los registros han sido borrados.',
                 icon: 'success',
-                timer: 1500, // Se cierra solo en 1.5 segundos
+                timer: 1500, 
                 showConfirmButton: false
             }).then(() => {
-                // Recargamos la página para que la tabla se actualice
                 window.location.reload();
             });
         }
@@ -209,7 +208,7 @@ function deleteRegistro(nombreTabla, idFila) {
                 method: 'POST',
                 body: formData
             })
-            then(response => {
+            .then(response => {
                 if (!response.ok) {
                     return response.text().then(mensajeError => {
                         throw new Error(mensajeError);
@@ -223,18 +222,144 @@ function deleteRegistro(nombreTabla, idFila) {
         },
         allowOutsideClick: () => !Swal.isLoading()
     }).then((result) => {
-        // Si C# respondió con un OK y terminó de cargar
         if (result.isConfirmed) {
             Swal.fire({
                 title: '¡Eliminado!',
                 text: 'Los registros han sido borrados.',
                 icon: 'success',
-                timer: 1500, // Se cierra solo en 1.5 segundos
+                timer: 1500, 
                 showConfirmButton: false
             }).then(() => {
-                // Recargamos la página para que la tabla se actualice
                 window.location.reload();
             });
         }
     });
+}
+
+// CONVIERTE UNA CELDA EN UN INPUT PARA MODIFICAR EL VALOR
+function hacerCeldaEditable(td, idFila, columna, tipoDato, valorActual, nombreTabla) {
+    if (td.classList.contains('editando')) return;
+
+    td.classList.add('editando');
+    var contenidoVisualOriginal = td.innerHTML;
+    var input;
+
+
+    if (tipoDato === 'Select' || tipoDato === 'Relacion') {
+        input = document.createElement('select');
+        input.className = 'form-control';
+
+        
+        var optionVacia = document.createElement('option');
+        optionVacia.value = '';
+        optionVacia.text = 'Vaciar celda...';
+        input.appendChild(optionVacia);
+
+       
+        var opcionesJson = td.getAttribute('data-opciones');
+        if (opcionesJson) {
+            var opciones = JSON.parse(opcionesJson);
+
+           
+            opciones.forEach(function (opc) {
+                var option = document.createElement('option');
+                if (tipoDato === 'Select') {
+                    option.value = opc.Valor;
+                    option.text = opc.Valor;
+                    option.dataset.color = opc.Color; // GUARDA EL COLOR DE FONDO PARA MOSTRARLO EN LA SIGUIENTE FUNCION
+                } else {
+                    option.value = opc.Id;
+                    option.text = opc.Valor;
+                }
+
+                // SI ES LA OPCION ACTUAL SE MARCA COMO SELECCIONADA
+                if (option.value === valorActual) option.selected = true;
+
+                input.appendChild(option);
+            });
+        }
+
+        input.addEventListener('change', function () {
+            input.blur();
+        });
+
+    } else {
+        
+        input = document.createElement('input');
+        input.value = valorActual;
+        input.className = 'form-control';
+
+        if (tipoDato === 'Numero' || tipoDato === 'Decimal') input.type = 'number';
+        else if (tipoDato === 'Fecha') input.type = 'date';
+        else input.type = 'text';
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') input.blur();
+            else if (e.key === 'Escape') {
+                td.innerHTML = contenidoVisualOriginal;
+                td.classList.remove('editando');
+            }
+        });
+    }
+
+    td.innerHTML = '';
+    td.appendChild(input);
+    input.focus();
+
+
+    input.addEventListener('blur', function () {
+        guardarEdicionCelda(td, idFila, columna, input.value, contenidoVisualOriginal, nombreTabla, tipoDato, input);
+    });
+}
+
+// FUNCION PARA ENVIAR EL NUEVO VALOR DE LA CELDA Y ALMACENARLO EN BD
+function guardarEdicionCelda(td, idFila, columna, nuevoValor, contenidoOriginal, nombreTabla, tipoDato, inputElement) {
+    td.classList.remove('editando');
+    var textoVisual = nuevoValor;
+
+    // COMPROBACIÓN POR SI LA HAN DEJADO VACIA QUE NO PETE LA BD
+    if (nuevoValor === '') {
+        textoVisual = '&nbsp;';
+    } else if (tipoDato === 'Select') {
+        var selectedOption = inputElement.options[inputElement.selectedIndex];
+        var color = selectedOption.dataset.color || '#64748b'; 
+        textoVisual = `<span class="chip" style="background-color: ${color}; color: #ffffff; border: none;">${nuevoValor}</span>`;
+    } else if (tipoDato === 'Relacion') {
+        var selectedOption = inputElement.options[inputElement.selectedIndex];
+        textoVisual = `<span class="cell-relation">${selectedOption.text}</span>`;
+    } else if (tipoDato === 'Fecha') {
+        var partes = nuevoValor.split('-');
+        if (partes.length === 3) textoVisual = partes[2] + '-' + partes[1] + '-' + partes[0];
+    }
+
+    td.innerHTML = textoVisual;
+
+
+    var formData = new FormData();
+    formData.append('nombreTabla', nombreTabla);
+    formData.append('idFila', idFila);
+    formData.append('columna', columna);
+    formData.append('valor', nuevoValor);
+
+    fetch('/Dashboard/UpdateCelda', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+            if (!response.ok) {
+                td.innerHTML = contenidoOriginal;
+                alSwal.fire({
+                    title: 'No se ha podido actualizar',
+                    text: 'El registro no se ha podido actualizar correctamente en la base de datos',
+                    icon: 'warning',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            td.innerHTML = contenidoOriginal;
+        });
 }
