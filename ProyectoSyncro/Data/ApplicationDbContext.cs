@@ -25,8 +25,8 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<MetaTabla> MetaTablas { get; set; }
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
+    public virtual DbSet<UsuarioAux> UsuariosAux { get; set; }
 
-    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Empresa>(entity =>
@@ -124,6 +124,30 @@ public partial class ApplicationDbContext : DbContext
                 .HasForeignKey(d => d.IdEmpresa)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Usuarios_Empresas");
+        });
+
+        modelBuilder.Entity<UsuarioAux>(entity =>
+        {
+            entity.ToTable("UsuariosAux");
+
+            entity.HasKey(e => e.IdUsuario)
+                .HasName("PK__UsuariosAux");
+
+            entity.Property(e => e.IdUsuario)
+                .ValueGeneratedNever();
+
+            entity.Property(e => e.Salt)
+                .HasColumnName("salt")
+                .HasColumnType("nvarchar(max)");
+
+            entity.Property(e => e.Password)
+                .HasColumnName("password")
+                .HasColumnType("varbinary(max)");
+
+            entity.HasOne(d => d.Usuario)
+                .WithOne(p => p.UsuarioAux)
+                .HasForeignKey<UsuarioAux>(d => d.IdUsuario)
+                .HasConstraintName("FK_UsuariosAux_Usuarios");
         });
 
         OnModelCreatingPartial(modelBuilder);

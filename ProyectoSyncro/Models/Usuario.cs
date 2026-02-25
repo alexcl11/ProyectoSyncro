@@ -18,4 +18,5 @@ public partial class Usuario
     public bool EsAdmin { get; set; }
 
     public virtual Empresa IdEmpresaNavigation { get; set; } = null!;
+    public virtual UsuarioAux? UsuarioAux { get; set; }
 }
