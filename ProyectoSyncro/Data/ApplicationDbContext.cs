@@ -26,7 +26,7 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
     public virtual DbSet<UsuarioAux> UsuariosAux { get; set; }
-
+    public virtual DbSet<Login> Login { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Empresa>(entity =>

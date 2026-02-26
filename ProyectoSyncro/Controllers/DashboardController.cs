@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using ProyectoSyncro.Extensions;
 using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
 
@@ -15,27 +16,34 @@ namespace ProyectoSyncro.Controllers
 
         public async Task<IActionResult> Index(string tabla)
         {
-            int idEmpresa = 1;
-            List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
-            if (tabla != null && tablas.Contains(tabla))
+            if (HttpContext.Session.GetObject<Usuario>("User") != null)
             {
-                List<Dictionary<string, object>> datos = 
-                    await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla);
-                var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
-                var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
-                var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
-                
+                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+                if (tabla != null && tablas.Contains(tabla))
+                {
+                    List<Dictionary<string, object>> datos = 
+                        await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla);
+                    var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
+                    var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
+                    var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
 
-                ViewData["TablasEmpresa"] = tablas;
-                ViewData["Title"] = tabla;
-                ViewData["Columnas"] = columnas;
-                ViewData["OpcionesSelect"] = opciones;
-                ViewData["OpcionesRelacion"] = relaciones;
+                    ViewData["NombreUser"] = HttpContext.Session.GetObject<Usuario>("User").Nombre;
+                    ViewData["TablasEmpresa"] = tablas;
+                    ViewData["Title"] = tabla;
+                    ViewData["Columnas"] = columnas;
+                    ViewData["OpcionesSelect"] = opciones;
+                    ViewData["OpcionesRelacion"] = relaciones;
                 
-                return View(datos);
-            } else
+                    return View(datos);
+                } else
+                {
+                    return View();
+                }
+            }
+            else
             {
-                return View();
+                return RedirectToAction("Login", "Auth");
             }
                 
         }
@@ -44,50 +52,69 @@ namespace ProyectoSyncro.Controllers
             (string nombreTabla, string nombreColumna, string tipoDato, string? nombreTablaRelacionada, 
             List<string> opcionesValor, List<string> opcionesColor)
         {
-            int idEmpresa = 1;
 
-            await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
-
-            if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
+            if (HttpContext.Session.GetObject<Usuario>("User") != null)
             {
-                for (int i = 0; i < opcionesValor.Count; i++)
+                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
+
+                if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
                 {
-                    string valor = opcionesValor[i];
-
-                    if (!string.IsNullOrWhiteSpace(valor))
+                    for (int i = 0; i < opcionesValor.Count; i++)
                     {
-                        string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
-                        await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreColumna, valor, color);
-                    }
-                }
-            }
-            
+                        string valor = opcionesValor[i];
 
-            return RedirectToAction("Index", new { tabla = nombreTabla });
+                        if (!string.IsNullOrWhiteSpace(valor))
+                        {
+                            string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
+                            await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreColumna, valor, color);
+                        }
+                    }
+                }           
+
+                return RedirectToAction("Index", new { tabla = nombreTabla });
+            }
+            else
+            {
+                return RedirectToAction("Login", "Auth");
+            }
         }
 
         public async Task<IActionResult> CreateRegistro(string nombreTabla, Dictionary<string, string> valoresRegistro)
         {
-            int idEmpresa = 1;
+            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            {
+                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
 
-            await this.repo.InsertRegistroTablaEmpresaAsync(idEmpresa, nombreTabla, valoresRegistro);
+                await this.repo.InsertRegistroTablaEmpresaAsync(idEmpresa, nombreTabla, valoresRegistro);
 
-            return RedirectToAction("Index", new { tabla = nombreTabla });
+                return RedirectToAction("Index", new { tabla = nombreTabla });
+            }
+            else
+            {
+                return RedirectToAction("Login", "Auth");
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateCelda(string nombreTabla, int idFila, string columna, string valor)
         {
-            int idEmpresa = 1; 
-
-            try
+            if (HttpContext.Session.GetObject<Usuario>("User") != null)
             {
-                await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
-                return Ok();
+                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                try
+                {
+                    await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message); 
+                }
             }
-            catch (Exception ex)
+            else
             {
-                return BadRequest(ex.Message); 
+                return RedirectToAction("Login", "Auth");
             }
         }
 
@@ -95,44 +122,58 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteRegistros(string nombreTabla, List<int> idsFilas)
         {
-            int idEmpresa = 1;
 
-            try
+            if (HttpContext.Session.GetObject<Usuario>("User") != null)
             {
-                if (idsFilas != null && idsFilas.Any())
+                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                try
                 {
-                    await this.repo.DeleteRegistrosAsync(idEmpresa, nombreTabla, idsFilas);
-                }
+                    if (idsFilas != null && idsFilas.Any())
+                    {
+                        await this.repo.DeleteRegistrosAsync(idEmpresa, nombreTabla, idsFilas);
+                    }
 
-                return Ok();
+                    return Ok();
+                }
+                catch (SqlException ex) when (ex.Number == 547)
+                {
+                    return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest("Ocurrió un error al intentar eliminar los datos.");
+                }
             }
-            catch (SqlException ex) when (ex.Number == 547)
+            else
             {
-                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
+                return RedirectToAction("Login", "Auth");
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteRegistro(string nombreTabla, int idFila)
         {
-            int idEmpresa = 1;
+            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            {
+                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                try
+                {
+                    await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);
+                    return Ok();
+                }
+                catch (SqlException ex) when (ex.Number == 547)
+                {
+                    return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest("Ocurrió un error al intentar eliminar los datos.");
+                }
+            }
+            else
+            {
+                return RedirectToAction("Login", "Auth");
 
-            try
-            {
-                await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);
-                return Ok();
-            }
-            catch (SqlException ex) when (ex.Number == 547)
-            {
-                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
             }
         }
     }
