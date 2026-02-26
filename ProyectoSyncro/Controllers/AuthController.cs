@@ -53,7 +53,7 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
-            Usuario usuario = await this.repo.LoginUserAsync(email, password);
+            UserSession usuario = await this.repo.LoginUserAsync(email, password);
             if (usuario != null)
             {
                 HttpContext.Session.SetObject("User", usuario);
@@ -64,6 +64,12 @@ namespace ProyectoSyncro.Controllers
                 TempData["InvalidCredentials"] = "Credenciales incorrectas";                
             }
             return View();
+        }
+
+        public IActionResult LogOut()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index", "Home");
         }
     }
 }

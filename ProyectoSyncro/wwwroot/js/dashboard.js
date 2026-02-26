@@ -363,3 +363,24 @@ function guardarEdicionCelda(td, idFila, columna, nuevoValor, contenidoOriginal,
             td.innerHTML = contenidoOriginal;
         });
 }
+
+// MODAL DE CONFIRMACIÓN PARA CERRAR SESIÓN
+function confirmarCerrarSesion(event) {
+    event.preventDefault();
+
+    Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: 'Tendrás que volver a introducir tus credenciales para acceder.',
+        icon: 'question',
+        heightAuto: false,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626', 
+        cancelButtonColor: '#64748b',  
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {            
+            window.location.href = '/Auth/LogOut';
+        }
+    });
+}

@@ -16,7 +16,7 @@ namespace ProyectoSyncro.Repositories
             this.context = context;
         }
 
-        public async Task<Usuario> LoginUserAsync(string email, string password)
+        public async Task<UserSession> LoginUserAsync(string email, string password)
         {
             Login user = await (from datos in this.context.Login
                            where datos.Email == email 
@@ -40,7 +40,19 @@ namespace ProyectoSyncro.Repositories
                     Usuario usuario = await (from datos in this.context.Usuarios
                                        where datos.Email == email
                                        select datos).FirstOrDefaultAsync();
-                    return usuario;
+                    Empresa empresa = await (from datos in this.context.Empresas
+                                             where datos.IdEmpresa == usuario.IdEmpresa
+                                             select datos).FirstOrDefaultAsync();
+                    UserSession userSession = new UserSession()
+                    {
+                        IdUsuario = usuario.IdUsuario,
+                        Email = usuario.Email,
+                        Nombre = usuario.Nombre,
+                        Admin = usuario.EsAdmin,
+                        IdEmpresa = empresa.IdEmpresa,
+                        NombreEmpresa = empresa.NombreEmpresa
+                    };
+                    return userSession;
                 }
                 else
                 {

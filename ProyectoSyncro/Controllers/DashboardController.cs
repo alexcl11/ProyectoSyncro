@@ -16,9 +16,9 @@ namespace ProyectoSyncro.Controllers
 
         public async Task<IActionResult> Index(string tabla)
         {
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
                 if (tabla != null && tablas.Contains(tabla))
                 {
@@ -28,7 +28,7 @@ namespace ProyectoSyncro.Controllers
                     var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
                     var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
 
-                    ViewData["NombreUser"] = HttpContext.Session.GetObject<Usuario>("User").Nombre;
+                    ViewData["NombreUser"] = HttpContext.Session.GetObject<UserSession>("User").Nombre;
                     ViewData["TablasEmpresa"] = tablas;
                     ViewData["Title"] = tabla;
                     ViewData["Columnas"] = columnas;
@@ -53,9 +53,9 @@ namespace ProyectoSyncro.Controllers
             List<string> opcionesValor, List<string> opcionesColor)
         {
 
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
 
                 if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
@@ -82,9 +82,9 @@ namespace ProyectoSyncro.Controllers
 
         public async Task<IActionResult> CreateRegistro(string nombreTabla, Dictionary<string, string> valoresRegistro)
         {
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
 
                 await this.repo.InsertRegistroTablaEmpresaAsync(idEmpresa, nombreTabla, valoresRegistro);
 
@@ -99,9 +99,9 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateCelda(string nombreTabla, int idFila, string columna, string valor)
         {
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 try
                 {
                     await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
@@ -123,9 +123,9 @@ namespace ProyectoSyncro.Controllers
         public async Task<IActionResult> DeleteRegistros(string nombreTabla, List<int> idsFilas)
         {
 
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 try
                 {
                     if (idsFilas != null && idsFilas.Any())
@@ -153,9 +153,9 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteRegistro(string nombreTabla, int idFila)
         {
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 try
                 {
                     await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);

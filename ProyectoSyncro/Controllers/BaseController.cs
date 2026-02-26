@@ -20,9 +20,9 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(string nombreTabla)
         {
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 await this.repo.CreateTablaEmpresaAsync(idEmpresa, nombreTabla);
                 return RedirectToAction("Index", "Dashboard", new { tabla = nombreTabla });
             }
@@ -31,13 +31,14 @@ namespace ProyectoSyncro.Controllers
 
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            if (HttpContext.Session.GetObject<Usuario>("User") != null)
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
-                int idEmpresa = HttpContext.Session.GetObject<Usuario>("User").IdEmpresa;
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
                 List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
 
                 ViewData["TablasEmpresa"] = tablas;
-                ViewData["NombreUSer"] = HttpContext.Session.GetObject<Usuario>("User").Nombre;
+                ViewData["NombreUser"] = HttpContext.Session.GetObject<UserSession>("User").Nombre;
+                ViewData["NombreEmpresa"] = HttpContext.Session.GetObject<UserSession>("User").NombreEmpresa;
                 await next();
             }
             else

@@ -60,12 +60,9 @@
 </div>
 
 <div class="data-table-container">
-    @if (Model != null && Model.Any())
+    @if (definicionColumnas != null && definicionColumnas.Any())
     {
-        // --- LÓGICA RAZOR PARA DETECTAR TIPOS ---
-        // Cogemos la primera fila para "adivinar" los tipos de datos
-        var primeraFila = Model.First();
-
+       
         // Función local para elegir el icono SVG según el tipo de dato C#
         string GetIconoPorTipoDato(string tipoDato)
         {
@@ -102,9 +99,6 @@
 
         <table class="data-table">
             <thead>
-                @{
-                    
-                }
                 <tr>
                     <th class="col-checkbox">
                         <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
@@ -121,159 +115,153 @@
                         </div>
                     </th>
 
-                        @foreach (var nombreColumna in primeraFila.Keys)
+                    @foreach (var colDef in definicionColumnas)
                         {
-                            if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
-                            {
-                                // 1. Buscamos la definición oficial de esta columna en tu base de datos
-                                var colDef = definicionColumnas?.FirstOrDefault(c => c.Nombre == nombreColumna);
+                                
+                            string iconoSvg = GetIconoPorTipoDato(colDef.TipoDato);
 
-                                // 2. Si no la encuentra (raro), asumimos "Texto" por defecto
-                                string tipoDatoReal = colDef != null ? colDef.TipoDato : "Texto";
-
-                                // 3. Obtenemos el SVG correspondiente a su tipo oficial
-                                string iconoSvg = GetIconoPorTipoDato(tipoDatoReal);
-
-                                <th>
-                                    <div class="th-content">
-                                        @Html.Raw(iconoSvg)
-                                        @nombreColumna
-                                    </div>
-                                </th>
-                            }
+                            <th>
+                                <div class="th-content">
+                                    @Html.Raw(iconoSvg)
+                                    @colDef.Nombre
+                                </div>
+                            </th>
+                         
                         }
                 </tr>
             </thead>
             <tbody>
-                @foreach (var fila in Model)
-                {
-                    string idFila = fila.Values.First().ToString();;
-                    <tr>                        
-                        <td class="col-checkbox">
-                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                @if(Model != null && Model.Any())
+                {                   
+                    @foreach (var fila in Model)
+                    {
+                        string idFila = fila.Values.First().ToString();;
+                        <tr>                        
+                            <td class="col-checkbox">
+                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
 
-                                <button type="button" id="btn-delete-@idFila" class="btn-icon-danger" style="display: none;" onclick="deleteRegistro('@ViewData["Title"]','@idFila')" title="Eliminar fila">
-                                    <svg class="icon" viewBox="0 0 24 24">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                    </svg>
-                                </button>
+                                    <button type="button" id="btn-delete-@idFila" class="btn-icon-danger" style="display: none;" onclick="deleteRegistro('@ViewData["Title"]','@idFila')" title="Eliminar fila">
+                                        <svg class="icon" viewBox="0 0 24 24">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </button>
 
-                                <input type="checkbox" class="checkbox-fila" id="checkbox-fila-@idFila" value="@idFila" 
-                                onchange="mostrarBotonDelete(this, '@idFila')">
+                                    <input type="checkbox" class="checkbox-fila" id="checkbox-fila-@idFila" value="@idFila" 
+                                    onchange="mostrarBotonDelete(this, '@idFila')">
 
-                            </div>
-                        </td>
-                        @foreach (var nombreColumna in fila.Keys)
-                        {
-                            if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
+                                </div>
+                            </td>
+                            @foreach (var colDef in definicionColumnas)
                             {
+                                var nombreColumna = colDef.Nombre;
+
+                                if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
+                                {
                                 
-                                var valor = fila[nombreColumna];
+                                    var valor = fila[nombreColumna];
 
-                                // 2. Buscamos la definición de esta columna para saber si es Relación, Select, etc.
-                                var colDef = definicionColumnas?.FirstOrDefault(c => c.Nombre == nombreColumna);
-
-                                // 3. LAS RELACIONES
-                                if (colDef != null && colDef.TipoDato == "Relacion" && valor != null)
-                                {
-                                    string idValor = valor.ToString();
-                                    string textoAMostrar = idValor;
-
-                                    // Preparamos las opciones en JSON para el Javascript
-                                    string opcionesJson = "[]";
-
-                                    if (opcionesRelacion != null && opcionesRelacion.ContainsKey(nombreColumna))
+                                    // 3. LAS RELACIONES
+                                    if (colDef != null && colDef.TipoDato == "Relacion" && valor != null)
                                     {
-                                        if (opcionesRelacion[nombreColumna].ContainsKey(idValor))
+                                        string idValor = valor.ToString();
+                                        string textoAMostrar = idValor;
+
+                                        // Preparamos las opciones en JSON para el Javascript
+                                        string opcionesJson = "[]";
+
+                                        if (opcionesRelacion != null && opcionesRelacion.ContainsKey(nombreColumna))
                                         {
-                                            textoAMostrar = opcionesRelacion[nombreColumna][idValor];
+                                            if (opcionesRelacion[nombreColumna].ContainsKey(idValor))
+                                            {
+                                                textoAMostrar = opcionesRelacion[nombreColumna][idValor];
+                                            }
+                                            // Empaquetamos el diccionario en un JSON [{"Id":"1", "Valor":"Juan"}, ...]
+                                            var listaOpciones = opcionesRelacion[nombreColumna].Select(k => new { Id = k.Key, Valor = k.Value });
+                                            opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
                                         }
-                                        // Empaquetamos el diccionario en un JSON [{"Id":"1", "Valor":"Juan"}, ...]
-                                        var listaOpciones = opcionesRelacion[nombreColumna].Select(k => new { Id = k.Key, Valor = k.Value });
-                                        opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
-                                    }
 
                                     
-                                    <td title="@textoAMostrar"
-                                        data-opciones="@opcionesJson"
-                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Relacion', '@idValor', '@ViewData["Title"]')">
-                                        <span class="cell-relation">@textoAMostrar</span>
-                                    </td>
-                                }
-                                // 4. LOS SELECTS 
-                                else if (colDef != null && colDef.TipoDato == "Select" && valor != null)
-                                {
-                                    string textoValor = valor.ToString();
-                                    string colorFondo = "#64748b";
-                                    string opcionesJson = "[]";
-
-                                    if (opcionesSelect != null && opcionesSelect.ContainsKey(nombreColumna))
+                                        <td title="@textoAMostrar"
+                                            data-opciones="@opcionesJson"
+                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Relacion', '@idValor', '@ViewData["Title"]')">
+                                            <span class="cell-relation">@textoAMostrar</span>
+                                        </td>
+                                    }
+                                    // 4. LOS SELECTS 
+                                    else if (colDef != null && colDef.TipoDato == "Select" && valor != null)
                                     {
-                                        var opcionEncontrada = opcionesSelect[nombreColumna].FirstOrDefault(o => o.Valor == textoValor);
-                                        if (opcionEncontrada != null && !string.IsNullOrEmpty(opcionEncontrada.Color))
+                                        string textoValor = valor.ToString();
+                                        string colorFondo = "#64748b";
+                                        string opcionesJson = "[]";
+
+                                        if (opcionesSelect != null && opcionesSelect.ContainsKey(nombreColumna))
                                         {
-                                            colorFondo = opcionEncontrada.Color;
+                                            var opcionEncontrada = opcionesSelect[nombreColumna].FirstOrDefault(o => o.Valor == textoValor);
+                                            if (opcionEncontrada != null && !string.IsNullOrEmpty(opcionEncontrada.Color))
+                                            {
+                                                colorFondo = opcionEncontrada.Color;
+                                            }
+                                            // Empaquetamos las opciones [{"Valor":"En Curso", "Color":"#ff0000"}, ...]
+                                            var listaOpciones = opcionesSelect[nombreColumna].Select(o => new { o.Valor, o.Color });
+                                            opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
                                         }
-                                        // Empaquetamos las opciones [{"Valor":"En Curso", "Color":"#ff0000"}, ...]
-                                        var listaOpciones = opcionesSelect[nombreColumna].Select(o => new { o.Valor, o.Color });
-                                        opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
+
+                                        <td title="@textoValor"
+                                            data-opciones="@opcionesJson"
+                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Select', '@textoValor', '@ViewData["Title"]')">
+                                            <span class="chip" style="background-color: @colorFondo; color: #ffffff; border: none;">
+                                                @textoValor
+                                            </span>
+                                        </td>
                                     }
-
-                                    <td title="@textoValor"
-                                        data-opciones="@opcionesJson"
-                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Select', '@textoValor', '@ViewData["Title"]')">
-                                        <span class="chip" style="background-color: @colorFondo; color: #ffffff; border: none;">
-                                            @textoValor
-                                        </span>
-                                    </td>
-                                }
-                                // 5. FECHAS
-                                else if (valor is DateTime fecha)
-                                {
-                                    string fechaFormatoInput = fecha.ToString("yyyy-MM-dd");
-
-                                    <td title="@fecha.ToLongDateString()"
-                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Fecha', '@fechaFormatoInput', '@ViewData["Title"]')">
-
-                                        @fecha.ToString("dd-MM-yyyy")
-
-                                    </td>
-                                }
-                                // 6. CASILLAS SÍ/NO (Booleanos)
-                                else if (colDef != null && colDef.TipoDato == "SiNo")
-                                {
-                                    bool isChecked = false;
-                                    if (valor != null)
+                                    // 5. FECHAS
+                                    else if (valor is DateTime fecha)
                                     {
-                                        // Comprobamos si es true o 1
-                                        if (valor is bool bVal) isChecked = bVal;
-                                        else if (valor.ToString() == "True" || valor.ToString() == "1") isChecked = true;
+                                        string fechaFormatoInput = fecha.ToString("yyyy-MM-dd");
+
+                                        <td title="@fecha.ToLongDateString()"
+                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Fecha', '@fechaFormatoInput', '@ViewData["Title"]')">
+
+                                            @fecha.ToString("dd-MM-yyyy")
+
+                                        </td>
                                     }
+                                    // 6. CASILLAS SÍ/NO (Booleanos)
+                                    else if (colDef != null && colDef.TipoDato == "SiNo")
+                                    {
+                                        bool isChecked = false;
+                                        if (valor != null)
+                                        {
+                                            // Comprobamos si es true o 1
+                                            if (valor is bool bVal) isChecked = bVal;
+                                            else if (valor.ToString() == "True" || valor.ToString() == "1") isChecked = true;
+                                        }
 
                                     
 
-                                    <td>
-                                        <input type="checkbox"
-                                               @(isChecked ? "checked" : "")
-                                               onchange="actualizarSiNo('@ViewData["Title"]', @idFila, '@nombreColumna', this.checked)">
-                                    </td>
+                                        <td>
+                                            <input type="checkbox"
+                                                   @(isChecked ? "checked" : "")
+                                                   onchange="actualizarSiNo('@ViewData["Title"]', @idFila, '@nombreColumna', this.checked)">
+                                        </td>
+                                    }
+                                    // 7. TEXTOS Y NÚMEROS NORMALES
+                                    else
+                                    {
+                                        string valorString = valor != null ? valor.ToString() : "";
+                                        <td title="@valorString"
+                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', '@(colDef != null ? colDef.TipoDato : "Texto")', '@valorString', '@ViewData["Title"]')">
+                                            @valorString
+                                        </td>
+                                    }
                                 }
-                                // 7. TEXTOS Y NÚMEROS NORMALES
-                                else
-                                {
-                                    string valorString = valor != null ? valor.ToString() : "";
-                                    <td title="@valorString"
-                                        onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', '@(colDef != null ? colDef.TipoDato : "Texto")', '@valorString', '@ViewData["Title"]')">
-                                        @valorString
-                                    </td>
-                                }
+
                             }
-
-                        }
-                    </tr>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -286,100 +274,125 @@
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                     <line x1="3" y1="9" x2="21" y2="9"></line>
                     <line x1="9" y1="21" x2="9" y2="9"></line>
-                    <path d="M12 14h.01" />
                 </svg>
             </div>
 
-            <h3 style="margin: 0 0 8px; color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif;">Tabla sin datos</h3>
-            <p style="margin: 0 0 24px; color: var(--text-muted); max-width: 400px;">Esta tabla está lista pero aún no tiene registros. Empieza añadiendo el primero.</p>
-            <button class="btn btn-primary" onclick="openRecordModal()" type="button">
+            <h3 style="margin: 0 0 8px; color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif;">Tabla sin columnas</h3>
+            <p style="margin: 0 0 24px; color: var(--text-muted); max-width: 400px;">Esta tabla acaba de ser creada. Añade tu primera columna para empezar a guardar datos.</p>
+            <button class="btn btn-primary" onclick="openColumnModal()" type="button">
                 <svg class="icon" viewBox="0 0 24 24">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Añadir primer registro
+                Añadir columna
             </button>
         </div>
     }
+</div>
+    
 </div>
 <div class="modal-overlay" id="newRecordModal">
     <div class="modal-card">
         <form method="post" asp-controller="Dashboard" asp-action="CreateRegistro">
 
-            <input type="hidden" name="nombreTabla" value="@ViewData["Title"]" />
+            @if (string.IsNullOrEmpty(ViewData["Title"]?.ToString()))
+            {
+                <div class="modal-header">
+                    <h3 class="modal-title">Selecciona una tabla</h3>
+                    <button type="button" class="modal-close" onclick="closeRecordModal()">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body" style="text-align: center; padding: 40px 20px;">
+                    <div style="background: #fee2e2; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #dc2626;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <p style="color: var(--text-muted); margin-bottom: 0;">Debes crear o seleccionar una tabla en el menú lateral antes de poder añadirle registros.</p>
+                </div>
+                <div class="modal-footer" style="justify-content: center;">
+                    <button type="button" class="btn btn-primary" onclick="closeRecordModal()">Entendido</button>
+                </div>
+            }
+            else
+            {
+                <input type="hidden" name="nombreTabla" value="@ViewData["Title"]" />
 
-            <div class="modal-header">
-                <h3 class="modal-title">Nuevo registro en @ViewData["Title"]</h3>
-                <button type="button" class="modal-close" onclick="closeRecordModal()">
-                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
+                <div class="modal-header">
+                    <h3 class="modal-title">Nuevo registro en @ViewData["Title"]</h3>
+                    <button type="button" class="modal-close" onclick="closeRecordModal()">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
 
-            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-                
-
-                @if (definicionColumnas != null && definicionColumnas.Any())
-                {
-                    foreach (var columna in definicionColumnas)
+                <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                    @if (definicionColumnas != null && definicionColumnas.Any())
                     {
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">@columna.Nombre</label>
-                            @if (columna.TipoDato == "Select")
-                            {
-                                <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
-                            
-                                    @if (opcionesSelect != null && opcionesSelect.ContainsKey(columna.Nombre))
-                                    {
-                                        foreach (var opcion in opcionesSelect[columna.Nombre])
+                        foreach (var columna in definicionColumnas)
+                        {
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">@columna.Nombre</label>
+                                @if (columna.TipoDato == "Select")
+                                {
+                                    <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
+                                        @if (opcionesSelect != null && opcionesSelect.ContainsKey(columna.Nombre))
                                         {
-                                            <option value="@opcion.Valor">@opcion.Valor</option>
+                                            foreach (var opcion in opcionesSelect[columna.Nombre])
+                                            {
+                                                <option value="@opcion.Valor">@opcion.Valor</option>
+                                            }
                                         }
-                                    }
-                                </select>
-                            }
-                            else if (columna.TipoDato == "Relacion")
-                            {
-                                <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
-                                    <option value="">Vincular registro...</option>
-
-                                    @if (opcionesRelacion != null && opcionesRelacion.ContainsKey(columna.Nombre))
-                                    {
-                                        foreach (var relacion in opcionesRelacion[columna.Nombre])
+                                    </select>
+                                }
+                                else if (columna.TipoDato == "Relacion")
+                                {
+                                    <select name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc; border-color: var(--brand); cursor: pointer;">
+                                        <option value="">Vincular registro...</option>
+                                        @if (opcionesRelacion != null && opcionesRelacion.ContainsKey(columna.Nombre))
                                         {
-                                            <option value="@relacion.Key">@relacion.Value</option>
+                                            foreach (var relacion in opcionesRelacion[columna.Nombre])
+                                            {
+                                                <option value="@relacion.Key">@relacion.Value</option>
+                                            }
                                         }
-                                    }
-                                </select>
-                            }
-                            else if (columna.TipoDato == "Fecha")
-                            {
-                                <input type="date" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
-                            }
-                            else if (columna.TipoDato == "SiNo")
-                            {
-                                <input type="checkbox" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 10%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
-                            }
-                            else if (columna.TipoDato == "Numero")
-                            {
-                                <input type="number" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
-                            }
-                            else
-                            {
-                                <input type="text" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
-                            }
+                                    </select>
+                                }
+                                else if (columna.TipoDato == "Fecha")
+                                {
+                                    <input type="date" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                                }
+                                else if (columna.TipoDato == "SiNo")
+                                {
+                                    <input type="checkbox" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 10%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                                }
+                                else if (columna.TipoDato == "Numero" || columna.TipoDato == "Decimal")
+                                {
+                                    <input type="number" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                                }
+                                else
+                                {
+                                    <input type="text" name="valoresRegistro[@columna.Nombre]" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; background: #f8fafc;">
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div style="padding: 20px; text-align: center; color: var(--text-muted);">
+                            <p>Aún no hay columnas configuradas para esta tabla.</p>
                         </div>
                     }
-                }
-                else
-                {
-                    <div style="padding: 20px; text-align: center; color: var(--text-muted);">
-                        <p>Aún no hay columnas configuradas para esta tabla.</p>
-                    </div>
-                }
-            </div>
+                </div>
+
                 @if (definicionColumnas != null && definicionColumnas.Any())
                 {
                     <div class="modal-footer">
@@ -387,81 +400,108 @@
                         <button type="submit" class="btn btn-primary">Guardar Registro</button>
                     </div>
                 }
-                
+            }
         </form>
     </div>
 </div>
-
 <div class="modal-overlay" id="newColumnModal">
     <div class="modal-card">
         <form method="post" asp-controller="Dashboard" asp-action="CreateColumn">
 
-            <input type="hidden" name="nombreTabla" value="@ViewData["Title"]" />
+            
+            @if (string.IsNullOrEmpty(ViewData["Title"]?.ToString()))
+            {
+                <div class="modal-header">
+                    <h3 class="modal-title">Selecciona una tabla</h3>
+                    <button type="button" class="modal-close" onclick="closeColumnModal()">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body" style="text-align: center; padding: 40px 20px;">
+                    <div style="background: #fee2e2; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #dc2626;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <p style="color: var(--text-muted); margin-bottom: 0;">Debes crear o seleccionar una tabla en el menú lateral antes de poder añadirle columnas.</p>
+                </div>
+                <div class="modal-footer" style="justify-content: center;">
+                    <button type="button" class="btn btn-primary" onclick="closeColumnModal()">Entendido</button>
+                </div>
+            }
+            else
+            {
+                
+                <input type="hidden" name="nombreTabla" value="@ViewData["Title"]" />
 
-            <div class="modal-header">
-                <h3 class="modal-title">Añadir columna a @ViewData["Title"]</h3>
-                <button type="button" class="modal-close" onclick="closeColumnModal()">
-                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="modal-body">
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Nombre de la columna</label>
-                    <input type="text" name="nombreColumna" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;" placeholder="Ej: Teléfono, Fecha de Entrega..." required>
+                <div class="modal-header">
+                    <h3 class="modal-title">Añadir columna a @ViewData["Title"]</h3>
+                    <button type="button" class="modal-close" onclick="closeColumnModal()">
+                        <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Tipo de Dato</label>
-                    <select name="tipoDato" id="selectTipoDato" class="form-control" onchange="toggleCamposDinamicos()" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; cursor: pointer;" required>
-                        <option value="Texto">Texto corto</option>
-                        <option value="Numero">Número entero</option>
-                        <option value="Decimal">Número decimal</option>
-                        <option value="Fecha">Fecha</option>
-                        <option value="SiNo">Casilla (Sí/No)</option>
-                        <option value="Select">Desplegable (Opciones)</option>
-                        <option value="Relacion">Vincular con otra tabla</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="divRelacion" style="display: none; padding: 16px; background: #eef2ff; border-radius: 12px; border: 1px dashed #c7d2fe;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--brand); margin-bottom: 8px;">¿A qué tabla quieres apuntar?</label>
-                    <select name="nombreTablaRelacionada" class="form-control" style="width: 100%; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 8px;">
-                        <option value="">Selecciona una tabla...</option>
-
-                        
-                        @if (tablas != null)
-                        {
-                            foreach (string t in tablas)
-                            {
-                                <option>@t</option>
-                            }
-                        }
-                    </select>
-                </div>
-
-                <div class="form-group" id="divOpcionesSelect" style="display: none; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--border);">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">Configurar opciones</label>
-
-                    <div id="opcionesContainer">
-                        <div class="opcion-row" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                            <input type="text" name="opcionesValor" class="form-control" placeholder="Ej: En Curso" style="flex: 1; margin: 0;">
-                            <input type="color" name="opcionesColor" class="form-control" value="#3b82f6" style="width: 50px; padding: 2px; height: 38px; cursor: pointer;" title="Color de etiqueta">
-                            <button type="button" class="btn btn-outline" onclick="eliminarOpcion(this)" style="padding: 8px 12px; margin: 0; color: #dc2626;">✕</button>
-                        </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Nombre de la columna</label>
+                        <input type="text" name="nombreColumna" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;" placeholder="Ej: Teléfono, Fecha de Entrega..." required>
                     </div>
 
-                    <button type="button" class="btn btn-outline" onclick="agregarOpcion()" style="width: 100%; margin-top: 8px; border-style: dashed;">+ Añadir otra opción</button>
-                </div>
-            </div>
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">Tipo de Dato</label>
+                        <select name="tipoDato" id="selectTipoDato" class="form-control" onchange="toggleCamposDinamicos()" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; cursor: pointer;" required>
+                            <option value="Texto">Texto corto</option>
+                            <option value="Numero">Número entero</option>
+                            <option value="Decimal">Número decimal</option>
+                            <option value="Fecha">Fecha</option>
+                            <option value="SiNo">Casilla (Sí/No)</option>
+                            <option value="Select">Desplegable (Opciones)</option>
+                            <option value="Relacion">Vincular con otra tabla</option>
+                        </select>
+                    </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeColumnModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Crear Columna</button>
-            </div>
+                    <div class="form-group" id="divRelacion" style="display: none; padding: 16px; background: #eef2ff; border-radius: 12px; border: 1px dashed #c7d2fe;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--brand); margin-bottom: 8px;">¿A qué tabla quieres apuntar?</label>
+                        <select name="nombreTablaRelacionada" class="form-control" style="width: 100%; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 8px;">
+                            <option value="">Selecciona una tabla...</option>
+                            @if (tablas != null)
+                            {
+                                foreach (string t in tablas)
+                                {
+                                    <option>@t</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="divOpcionesSelect" style="display: none; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--border);">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">Configurar opciones</label>
+
+                        <div id="opcionesContainer">
+                            <div class="opcion-row" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                <input type="text" name="opcionesValor" class="form-control" placeholder="Ej: En Curso" style="flex: 1; margin: 0;">
+                                <input type="color" name="opcionesColor" class="form-control" value="#3b82f6" style="width: 50px; padding: 2px; height: 38px; cursor: pointer;" title="Color de etiqueta">
+                                <button type="button" class="btn btn-outline" onclick="eliminarOpcion(this)" style="padding: 8px 12px; margin: 0; color: #dc2626;">✕</button>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-outline" onclick="agregarOpcion()" style="width: 100%; margin-top: 8px; border-style: dashed;">+ Añadir otra opción</button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeColumnModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Columna</button>
+                </div>
+            }
         </form>
     </div>
 </div>
