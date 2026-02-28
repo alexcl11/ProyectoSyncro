@@ -491,5 +491,65 @@ namespace ProyectoSyncro.Repositories
                 await com.Connection.CloseAsync();
             }
         }
+
+        public async Task RenameTablaAsync(int idEmpresa, string nombreTablaOld, string nombreTablaNew)
+        {
+
+            string sql = "SP_UPSERT_TABLA_SCHEMA_EMPRESA";
+
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTablaNew = new SqlParameter("@nombreTablaNew", nombreTablaNew);
+            SqlParameter paramNombreTablaOld = new SqlParameter("@nombreTablaOld", nombreTablaOld);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTablaNew);
+                com.Parameters.Add(paramNombreTablaOld);
+
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
+
+        public async Task RenameColumnaAsync(int idEmpresa, string nombreTabla, string nombreColumnaOld, string nombreColumnaNew, string tipoDato, string? nombreTablaRelacionada)
+        {
+            int? idTablaRel = null;
+            if (!string.IsNullOrEmpty(nombreTablaRelacionada))
+            {
+                idTablaRel = await (from datos in this.context.MetaTablas
+                                    where datos.IdEmpresa == idEmpresa && datos.Nombre == nombreTablaRelacionada
+                                    select datos.IdTabla).FirstOrDefaultAsync();
+            }
+
+            string sql = "SP_UPDATE_COLUMNA_TABLA_SCHEMA_EMPRESA";
+
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@nombreTabla", nombreTabla);
+            SqlParameter paramNombreColumnaOld = new SqlParameter("@nombreColumnaOld", nombreColumnaOld);
+            SqlParameter paramNombreColumnaNew = new SqlParameter("@nombreColumnaNew", nombreColumnaNew);
+            SqlParameter paramTipoDato = new SqlParameter("@tipoDato", tipoDato);
+            SqlParameter paramRelacionada = new SqlParameter("@IdTablaRelacionada", idTablaRel ?? (object)DBNull.Value);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+                com.Parameters.Add(paramNombreColumnaOld);
+                com.Parameters.Add(paramNombreColumnaNew);
+                com.Parameters.Add(paramTipoDato);                
+                com.Parameters.Add(paramRelacionada);
+
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
     }
 }

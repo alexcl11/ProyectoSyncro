@@ -504,3 +504,163 @@ function eliminarColumna(nombreTabla, nombreColumna) {
         }
     });
 }
+// MOSTRAR U OCULTAR RELACIONES Y SELECTS EN EDICIÓN
+function toggleEditCamposDinamicos() {
+    var tipoDato = document.getElementById('edit-tipoDato').value;
+    var divRelacion = document.getElementById('edit-divRelacion');
+    var divOpciones = document.getElementById('edit-divOpcionesSelect');
+
+    if (tipoDato === 'Relacion') {
+        divRelacion.style.display = 'block';
+        divOpciones.style.display = 'none';
+    } else if (tipoDato === 'Select') {
+        divRelacion.style.display = 'none';
+        divOpciones.style.display = 'block';
+        document.getElementById('edit-nombreTablaRelacionada').value = '';
+    } else {
+        divRelacion.style.display = 'none';
+        divOpciones.style.display = 'none';
+        document.getElementById('edit-nombreTablaRelacionada').value = '';
+    }
+}
+// RENOMBRAR TABLA (Menú Lateral)
+function renombrarTabla(nombreViejo) {
+    Swal.fire({
+        title: 'Renombrar tabla',
+        input: 'text',
+        heightAuto: false,
+        inputValue: nombreViejo,
+        inputPlaceholder: 'Nuevo nombre...',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+            if (!value) return '¡Necesitas escribir un nombre!';
+            if (value === nombreViejo) return 'El nombre es el mismo.';
+        },
+        showLoaderOnConfirm: true,
+        preConfirm: (nombreNuevo) => {
+            var formData = new FormData();
+            formData.append('nombreOld', nombreViejo);
+            formData.append('nombreNew', nombreNuevo);
+
+            return fetch('/Dashboard/RenameTabla', { method: 'POST', body: formData })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al renombrar o nombre duplicado');
+                    return response.json();
+                })
+                .catch(error => Swal.showValidationMessage(error.message));
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = result.value.url;
+        }
+    });
+}
+
+// ABRIR MODAL EDITAR COLUMNA
+function editarColumna(nombreViejo, tipoDatoActual) {
+    document.getElementById('edit-nombreOld').value = nombreViejo;
+    document.getElementById('edit-nombreNew').value = nombreViejo;
+    document.getElementById('edit-tipoDato').value = tipoDatoActual;
+
+    // Limpiamos las opciones previas si las hubiera
+    document.getElementById('edit-opcionesContainer').innerHTML = '';
+
+    toggleEditCamposDinamicos();
+    document.getElementById('editColumnModal').classList.add('active');
+}
+
+// CERRAR MODAL EDITAR COLUMNA
+function closeEditColumnModal() {
+    document.getElementById('editColumnModal').classList.remove('active');
+}
+
+// MANEJAR SELECTS Y RELACIONES EN EDICIÓN
+function toggleEditCamposDinamicos() {
+    var tipoDato = document.getElementById('edit-tipoDato').value;
+    var divRelacion = document.getElementById('edit-divRelacion');
+    var divOpciones = document.getElementById('edit-divOpcionesSelect');
+
+    if (tipoDato === 'Relacion') {
+        divRelacion.style.display = 'block';
+        divOpciones.style.display = 'none';
+    } else if (tipoDato === 'Select') {
+        divRelacion.style.display = 'none';
+        divOpciones.style.display = 'block';
+        document.getElementById('edit-nombreTablaRelacionada').value = '';
+    } else {
+        divRelacion.style.display = 'none';
+        divOpciones.style.display = 'none';
+        document.getElementById('edit-nombreTablaRelacionada').value = '';
+    }
+}
+
+// AÑADIR NUEVA ETIQUETA DE COLOR EN EDICIÓN
+function agregarOpcionEdit() {
+    var container = document.getElementById('edit-opcionesContainer');
+    var div = document.createElement('div');
+    div.className = 'opcion-row';
+    div.style.display = 'flex';
+    div.style.gap = '8px';
+    div.style.marginBottom = '8px';
+
+    div.innerHTML = `
+        <input type="text" name="opcionesValor" class="form-control" placeholder="Ej: Nueva Etiqueta" style="flex: 1; margin: 0;">
+        <input type="color" name="opcionesColor" class="form-control" value="#3b82f6" style="width: 50px; padding: 2px; height: 38px; cursor: pointer;">
+        <button type="button" class="btn btn-outline" onclick="eliminarOpcion(this)" style="padding: 8px 12px; margin: 0; color: #dc2626;">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+// INTERCEPTAR EL GUARDADO DE LA COLUMNA PARA GESTIONAR ERRORES EN PANTALLA
+function guardarEdicionColumna(event) {
+    event.preventDefault();
+
+    var form = document.getElementById('formEditColumn');
+    var formData = new FormData(form);
+
+    Swal.fire({
+        title: 'Guardando cambios...',
+        allowOutsideClick: false,
+        heightAuto: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+
+    fetch('/Dashboard/RenameColumna', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+
+            if (!response.ok) {
+                return response.text().then(msg => { throw new Error(msg); });
+            }
+            return response;
+        })
+        .then(() => {
+            Swal.fire({
+                title: '¡Actualizado!',
+                heightAuto: false,
+                text: 'La columna ha sido guardada con éxito.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.reload(); 
+            });
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error de conversión',
+                text: error.message,
+                heightAuto: false,
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc2626'
+            });
+        });
+}

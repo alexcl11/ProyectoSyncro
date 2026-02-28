@@ -1,6 +1,6 @@
 ﻿1.- Eliminar tablas y columnas✅
 2.- Poder actualizar registros en las filas ✅
-3.- Poder actualizar los nombres de las tablas y columnas
+3.- Poder actualizar los nombres de las tablas y columnas✅
 4.- Vistas de Calendario/Kanban
 5.- Ordenación/Filtrado
 6.- Seccion de ajustes (ver que poner)

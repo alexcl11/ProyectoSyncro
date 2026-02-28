@@ -48,6 +48,7 @@ namespace ProyectoSyncro.Controllers
                 
         }
 
+        [HttpPost]
         public async Task<IActionResult> CreateColumn
             (string nombreTabla, string nombreColumna, string tipoDato, string? nombreTablaRelacionada, 
             List<string> opcionesValor, List<string> opcionesColor)
@@ -80,6 +81,7 @@ namespace ProyectoSyncro.Controllers
             }
         }
 
+        [HttpPost]
         public async Task<IActionResult> CreateRegistro(string nombreTabla, Dictionary<string, string> valoresRegistro)
         {
             if (HttpContext.Session.GetObject<UserSession>("User") != null)
@@ -233,6 +235,57 @@ namespace ProyectoSyncro.Controllers
             else
             {
                 return RedirectToAction("Login", "Auth");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RenameTabla(string nombreOld, string nombreNew)
+        {
+            if (HttpContext.Session.GetObject<UserSession>("User") == null) return RedirectToAction("Login", "Auth");
+
+            int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+            try
+            {
+                await this.repo.RenameTablaAsync(idEmpresa, nombreOld, nombreNew);
+                return Ok(new { url = $"/Dashboard/Index?tabla={nombreNew}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("No se pudo renombrar la tabla. Es posible que el nombre ya exista.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RenameColumna(
+    string nombreTabla, string nombreOld, string nombreNew, string tipoDato,
+    string? nombreTablaRelacionada, List<string> opcionesValor, List<string> opcionesColor)
+        {
+            if (HttpContext.Session.GetObject<UserSession>("User") == null) return RedirectToAction("Login", "Auth"); 
+
+            int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+            try
+            {
+                await this.repo.RenameColumnaAsync(idEmpresa, nombreTabla, nombreOld, nombreNew, tipoDato, nombreTablaRelacionada);
+
+                if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
+                {
+                    for (int i = 0; i < opcionesValor.Count; i++)
+                    {
+                        string valor = opcionesValor[i];
+                        if (!string.IsNullOrWhiteSpace(valor))
+                        {
+                            string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
+                            await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreNew, valor, color);
+                        }
+                    }
+                }
+
+                
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("No se pudo actualizar la columna. Es posible que el tipo de dato no sea compatible con los registros actuales (ej: intentar pasar letras a números).");
             }
         }
     }
