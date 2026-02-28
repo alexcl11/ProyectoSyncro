@@ -384,3 +384,123 @@ function confirmarCerrarSesion(event) {
         }
     });
 }
+
+// FUNCION PARA MOSTRAR LA PAPELERA EN LAS TABLAS SELECCIONADAS
+function mostrarPapeleraTablas() {
+    var btnTablas = document.getElementById('btn-delete-tablas');
+    var tablasSeleccionadas = document.querySelectorAll('.checkbox-tabla:checked');
+
+    if (tablasSeleccionadas.length > 0) {
+        btnTablas.style.display = 'block';
+    } else {
+        btnTablas.style.display = 'none';
+    }
+}
+
+// FUNCION QUE COGE LAS TABLAS SELECCIONADAS Y LANZA EL SWEETALERT
+function getTablasABorrar() {
+    var checkboxesTablas = document.querySelectorAll('.checkbox-tabla:checked');
+    var tablasPendientes = [];
+
+    checkboxesTablas.forEach(function (chk) {
+        tablasPendientes.push(chk.value);
+    });
+
+    if (tablasPendientes.length === 0) return;
+
+    Swal.fire({
+        title: '¿Eliminar tablas?',
+        text: `Vas a destruir ${tablasPendientes.length} tabla(s) y TODOS sus registros. Esta acción no se puede deshacer.`,
+        icon: 'warning',
+        heightAuto: false,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, destruir',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            var formData = new FormData();
+            tablasPendientes.forEach(t => formData.append('nombresTablas', t));
+
+            return fetch('/Dashboard/DeleteTablasEmpresa', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(mensajeError => {
+                            throw new Error(mensajeError);
+                        });
+                    }
+                    return response;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`${error.message}`);
+                });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: '¡Destruidas!',
+                text: 'Las tablas han sido eliminadas por completo.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = '/Dashboard/Index';
+            });
+        }
+    });
+}
+
+// FUNCION PARA ELIMINAR UNA COLUMNA COMPLETA
+function eliminarColumna(nombreTabla, nombreColumna) {
+    Swal.fire({
+        title: `¿Eliminar la columna '${nombreColumna}'?`,
+        text: "Se perderán todos los datos de esta columna en TODOS los registros. Esta acción no se puede deshacer.",
+        icon: 'warning',
+        heightAuto: false,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            var formData = new FormData();
+            formData.append('nombreTabla', nombreTabla);
+            formData.append('nombreColumna', nombreColumna);
+
+            return fetch('/Dashboard/DeleteColumna', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(mensajeError => {
+                            throw new Error(mensajeError);
+                        });
+                    }
+                    return response;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`${error.message}`);
+                });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: '¡Eliminada!',
+                text: 'La columna y sus datos han sido borrados.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.reload();
+            });
+        }
+    });
+}

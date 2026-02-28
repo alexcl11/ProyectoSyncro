@@ -176,5 +176,64 @@ namespace ProyectoSyncro.Controllers
 
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTablasEmpresa(List<string> nombresTablas)
+        {
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            {
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+                try
+                {
+                    if (nombresTablas != null && nombresTablas.Any())
+                    {
+                        foreach (string tabla in nombresTablas)
+                        {
+                            await this.repo.DeleteTablasEmpresaAsync(idEmpresa, tabla);
+                        }
+                    }
+                    return Ok();
+                }
+                catch (SqlException ex) when (ex.Number == 547 || ex.Number == 3726)
+                {
+                    return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest("Ocurrió un error al intentar eliminar los datos.");
+                }
+            }
+            else
+            {
+                return RedirectToAction("Login", "Auth");
+
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteColumna(string nombreTabla, string nombreColumna)
+        {
+            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            {
+                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+                try
+                {
+                    await this.repo.DeleteColumnaAsync(idEmpresa, nombreTabla, nombreColumna);
+                    return Ok();
+                }
+                catch (SqlException ex) when (ex.Number == 5074) 
+                {
+                    return BadRequest("No se puede eliminar esta columna porque está atada a una restricción o relación de la base de datos.");
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest("Ocurrió un error al intentar eliminar la columna.");
+                }
+            }
+            else
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+        }
     }
 }

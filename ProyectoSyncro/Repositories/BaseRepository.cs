@@ -179,11 +179,11 @@ namespace ProyectoSyncro.Repositories
         public async Task<List<MetaColumna>> GetColumnasTablaAsync
             (int idEmpresa, string nombreTabla)
         {
-            var consulta= from columna in this.context.MetaColumnas
+            var consulta= (from columna in this.context.MetaColumnas
                         join tabla in this.context.MetaTablas
                         on columna.IdTabla equals tabla.IdTabla
                         where tabla.IdEmpresa == idEmpresa && tabla.Nombre == nombreTabla
-                        select columna;
+                        select columna).OrderBy(x => x.IdColumna);
 
             return await consulta.ToListAsync();
         }
@@ -449,5 +449,47 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
+        public async Task DeleteTablasEmpresaAsync(int idEmpresa, string nombreTabla)
+        {
+            string sql = "SP_DELETE_TABLA_EMPRESA";
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@nombreTabla", nombreTabla);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+
+                await com.Connection.OpenAsync();
+
+                await com.ExecuteNonQueryAsync();
+
+                await com.Connection.CloseAsync();
+            }
+        }
+
+        public async Task DeleteColumnaAsync(int idEmpresa, string nombreTabla, string nombreColumna)
+        {
+            string sql = "SP_DROP_COLUMNA_TABLA_SCHEMA_EMPRESA";
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombreTabla = new SqlParameter("@nombreTabla", nombreTabla);
+            SqlParameter paramNombreColumna = new SqlParameter("@nombreColumna", nombreColumna);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombreTabla);
+                com.Parameters.Add(paramNombreColumna);
+
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
     }
 }
