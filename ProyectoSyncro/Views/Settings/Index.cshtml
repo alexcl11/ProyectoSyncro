@@ -1,0 +1,137 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Ajustes";
+    bool esAdmin = (bool)ViewData["EsAdmin"];
+    List<Usuario> equipo = (List<Usuario>)ViewData["Equipo"];
+}
+
+<div class="settings-container">
+    <aside class="settings-nav">
+        <button class="settings-nav-item active" onclick="switchTab(this, 'perfil')">Mi Perfil</button>
+        <button class="settings-nav-item" onclick="switchTab(this, 'empresa')">Empresa</button>
+
+        @if (esAdmin)
+        {
+            <button class="settings-nav-item" onclick="switchTab(this, 'equipo')">Gestión de Equipo</button>
+        }
+    </aside>
+
+    <main class="settings-content">
+
+        <section id="tab-perfil" class="settings-card">
+            <h2 class="settings-section-title">Mi Perfil</h2>
+            <p class="settings-section-desc">Gestiona tu información personal y cómo te ven los demás.</p>
+
+            <form id="formUsuario" onsubmit="guardarPerfil(event)">
+                <div class="settings-form-row">
+                    <label class="settings-label">Nombre completo</label>
+                    <input type="text" class="form-control" name="nombreUser" value="@ViewData["NombreUser"]" />
+                </div>
+                <div class="settings-form-row">
+                    <label class="settings-label">Email</label>
+                    <input type="text" name="email" class="form-control" value="@ViewData["EmailUser"]" />
+                </div>
+                <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
+            </form>
+        </section>
+
+        <section id="tab-empresa" class="settings-card" style="display: none;">
+            <h2 class="settings-section-title">Datos de la Empresa</h2>
+            <p class="settings-section-desc">Información general de tu organización.</p>
+
+            <form id="formEmpresa" onsubmit="guardarEmpresa(event)">
+                <div class="settings-form-row">
+                    <label class="settings-label">CIF de la organización</label>
+                    <input type="text" name="cif" class="form-control" value="@ViewData["CifEmpresa"]" @(esAdmin ? "" : "disabled") required />
+                </div>
+
+                <div class="settings-form-row">
+                    <label class="settings-label">Nombre de la organización</label>
+                    <input type="text" name="nombreEmpresa" class="form-control" value="@ViewData["NombreEmpresa"]" @(esAdmin ? "" : "disabled") required />
+                </div>
+
+                <div class="settings-form-row">
+                    <label class="settings-label">Estado de la cuenta</label>
+                    <div class="switch-container">
+                        @{
+                            // Recuperamos el valor real de la base de datos
+                            bool isActiva = ViewData["EmpresaActiva"] != null ? (bool)ViewData["EmpresaActiva"] : true;
+                        }
+                        <label class="switch">
+                            <input type="checkbox" id="empresa-activa-toggle" name="empresaActiva"
+                                   @(isActiva ? "checked" : "")
+                                   @(esAdmin ? "" : "disabled")
+                                   onchange="actualizarTextoEstado(this)">
+                            <span class="slider"></span>
+                        </label>
+
+                        <span id="estado-text" class="switch-label-text" style="color: @(isActiva ? "#10b981" : "#64748b");">
+                            @(isActiva ? "Activa" : "Inactiva")
+                        </span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                        Si desactivas la empresa, ningún usuario de tu equipo (excepto administradores) podrá acceder al sistema.
+                    </p>
+                </div>
+
+                @if (esAdmin)
+                {
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                }
+            </form>
+        </section>
+
+        @if (esAdmin)
+        {
+            <section id="tab-equipo" class="settings-card" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h2 class="settings-section-title">Gestión de Equipo</h2>
+                        <p class="settings-section-desc">Invita a nuevos miembros y gestiona sus permisos.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddUserModal()">+ Nuevo Usuario</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            @if (esAdmin)
+                            {
+                                <th>Acciones</th>
+                            }
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (Usuario user in equipo)
+                        {                            
+                            <tr>
+                                <td>@user.Nombre</td>
+                                <td>@user.Email</td>
+                                @if (user.EsAdmin)
+                                {                                    
+                                    <td><span class="chip" style="background: var(--brand); color: white;">Administrador</span></td>
+                                    <td>
+                                        <button class="btn-icon">⚙️</button>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td><span class="chip" style="background: var(--brand); color: white;">Empleado</span></td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </section>
+        }
+
+    </main>
+</div>
+
+@section Scripts {
+    <script src="~/js/settings.js" asp-append-version="true"></script>
+}

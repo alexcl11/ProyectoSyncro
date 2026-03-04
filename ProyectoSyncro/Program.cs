@@ -11,6 +11,7 @@ builder.Services.AddSession();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlCRMConnection")));
 
+builder.Services.AddScoped<SettingsRepository>();
 builder.Services.AddScoped<BaseRepository>();
 builder.Services.AddScoped<AuthRepository>();
 var app = builder.Build();
