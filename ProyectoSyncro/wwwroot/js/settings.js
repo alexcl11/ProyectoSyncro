@@ -37,6 +37,7 @@ function guardarEmpresa(event) {
 
     Swal.fire({
         title: 'Guardando...',
+        heightAuto: false,
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
@@ -56,6 +57,7 @@ function guardarEmpresa(event) {
         .then(() => {
             Swal.fire({
                 title: '¡Actualizado!',
+                heightAuto: false,
                 text: 'Los datos de la empresa han sido guardados.',
                 icon: 'success',
                 timer: 1500,
@@ -87,6 +89,7 @@ function guardarPerfil(event) {
     Swal.fire({
         title: 'Actualizando perfil...',
         allowOutsideClick: false,
+        heightAuto: false,
         didOpen: () => { Swal.showLoading(); }
     });
 
@@ -102,6 +105,7 @@ function guardarPerfil(event) {
             Swal.fire({
                 title: '¡Perfil actualizado!',
                 icon: 'success',
+                heightAuto: false,
                 timer: 1500,
                 showConfirmButton: false
             }).then(() => {
@@ -112,5 +116,89 @@ function guardarPerfil(event) {
         })
         .catch(error => {
             Swal.fire('Error', error.message, 'error');
+        });
+}
+
+// --- FUNCIONES DEL MODAL DE NUEVO USUARIO ---
+
+// 1. Abrir Modal
+function openAddUserModal() {
+    // Reseteamos el formulario al abrir
+    document.getElementById('formNewUser').reset();
+    document.getElementById('check-es-admin').checked = false; // Por defecto No es admin
+
+    document.getElementById('newUserModal').classList.add('active');
+}
+
+// 2. Cerrar Modal
+function closeAddUserModal() {
+    document.getElementById('newUserModal').classList.remove('active');
+}
+
+// 3. Efecto visual (Opcional, si quieres cambiar algún texto al activar el Switch)
+function actualizarTextoAdmin(checkbox) {
+    const labelTexto = document.getElementById('esadmin-text');
+
+    if (checkbox.checked) {
+        labelTexto.textContent = 'Activa';
+        labelTexto.style.color = '#10b981'; // Verde
+    } else {
+        labelTexto.textContent = 'Inactiva';
+        labelTexto.style.color = '#64748b'; // Gris
+    }
+}
+
+// 4. Enviar Datos por AJAX a C#
+function guardarNuevoUsuario(event) {
+    event.preventDefault();
+
+    var form = document.getElementById('formNewUser');
+    var formData = new FormData(form);
+
+    // Como el checkbox solo manda valor si está "on", le forzamos el Booleano para C#
+    var esAdmin = document.getElementById('check-es-admin').checked;
+    formData.set('esAdmin', esAdmin); // Sobrescribimos con true/false
+
+    // Mostramos estado de carga
+    Swal.fire({
+        title: 'Creando usuario...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Enviamos al Controlador (Asegúrate de que la ruta apunta a tu controlador correcto)
+    fetch('/Settings/CreateUser', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(msg => { throw new Error(msg); });
+            }
+            return response;
+        })
+        .then(() => {
+            closeAddUserModal(); // Cerramos el modal primero
+
+            Swal.fire({
+                title: '¡Usuario creado!',
+                text: 'El nuevo miembro del equipo ha sido añadido.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.reload(); // Recargamos para ver al usuario en la tabla
+            });
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'No se pudo crear',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc2626'
+            });
         });
 }

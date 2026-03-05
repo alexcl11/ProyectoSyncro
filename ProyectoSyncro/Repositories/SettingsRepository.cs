@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using ProyectoSyncro.Data;
+using ProyectoSyncro.Helpers;
 using ProyectoSyncro.Models;
 using System.Data.Common;
 
@@ -70,6 +71,39 @@ namespace ProyectoSyncro.Repositories
                 com.Parameters.Add(paramNombre);
                 com.Parameters.Add(paramEmail);
                 com.Parameters.Add(paramEsAdmin);
+
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
+
+        public async Task CreateUserAsync(int idEmpresa, string nombre, string email, bool esAdmin, string password)
+        {
+            string salt = HelperTools.GenerateSalt();
+            byte[] passwordHash = HelperCryptography.EncryptPassword(password, salt);
+
+            string sql = "SP_CREATE_USER";
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+            SqlParameter paramNombre = new SqlParameter("@nombre", nombre);
+            SqlParameter paramEmail = new SqlParameter("@email", email);
+            SqlParameter paramPassword = new SqlParameter("@password", password);
+            SqlParameter paramEsAdmin = new SqlParameter("@esAdmin", esAdmin);
+            SqlParameter paramSalt = new SqlParameter("@salt", salt);
+            SqlParameter paramPasswordHash = new SqlParameter("@passwordHash", passwordHash);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdEmpresa);
+                com.Parameters.Add(paramNombre);
+                com.Parameters.Add(paramEmail);
+                com.Parameters.Add(paramPassword);
+                com.Parameters.Add(paramEsAdmin);
+                com.Parameters.Add(paramSalt);
+                com.Parameters.Add(paramPasswordHash);
 
                 await com.Connection.OpenAsync();
                 await com.ExecuteNonQueryAsync();

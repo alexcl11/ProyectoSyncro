@@ -34,7 +34,7 @@
                 <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
             </form>
         </section>
-
+        
         <section id="tab-empresa" class="settings-card" style="display: none;">
             <h2 class="settings-section-title">Datos de la Empresa</h2>
             <p class="settings-section-desc">Información general de tu organización.</p>
@@ -69,9 +69,12 @@
                             @(isActiva ? "Activa" : "Inactiva")
                         </span>
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
-                        Si desactivas la empresa, ningún usuario de tu equipo (excepto administradores) podrá acceder al sistema.
-                    </p>
+                    @if (esAdmin)
+                    {                            
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                            Si desactivas la empresa, ningún usuario de tu equipo (excepto administradores) podrá acceder al sistema.
+                        </p>
+                    }
                 </div>
 
                 @if (esAdmin)
@@ -114,13 +117,33 @@
                                 @if (user.EsAdmin)
                                 {                                    
                                     <td><span class="chip" style="background: var(--brand); color: white;">Administrador</span></td>
-                                    <td>
-                                        <button class="btn-icon">⚙️</button>
-                                    </td>
+                                    
                                 }
                                 else
                                 {
                                     <td><span class="chip" style="background: var(--brand); color: white;">Empleado</span></td>
+                                }
+                                @if (esAdmin)
+                                {
+                                    <td>
+                                        <div style="display: flex; gap: 4px;">
+                                            <button type="button" style="background: transparent; border: none; padding: 2px; cursor: pointer; color: var(--brand);"
+                                                    onclick="editarUsuario()" title="Editar columna">
+                                                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                    <path d="M12 20h9"></path>
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                                </svg>
+                                            </button>
+
+                                            <button type="button" style="background: transparent; border: none; padding: 2px; cursor: pointer; color: #94a3b8;"
+                                                    onclick="eliminarUsuario()" title="Eliminar columna">
+                                                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
                                 }
                             </tr>
                         }
@@ -131,7 +154,59 @@
 
     </main>
 </div>
+<div class="modal-overlay" id="newUserModal">
+    <div class="modal-card">
+        <form id="formNewUser" onsubmit="guardarNuevoUsuario(event)">
 
+            <div class="modal-header">
+                <h3 class="modal-title">Invitar Nuevo Usuario</h3>
+                <button type="button" class="modal-close" onclick="closeAddUserModal()">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Nombre completo</label>
+                    <input type="text" name="nombre" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;" placeholder="Ej: Laura Gómez" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Correo electrónico</label>
+                    <input type="email" name="email" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;" placeholder="laura@empresa.com" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Contraseña provisional</label>
+                    <input type="password" name="password" class="form-control" style="width: 100%; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px;" placeholder="Mínimo 6 caracteres" required minlength="6">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <label style="display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Permisos de Administrador</label>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Puede gestionar la empresa, facturación, añadir o borrar tablas y crear otros usuarios.</p>
+                        </div>
+                        <div class="switch-container" style="margin-left: 15px;">
+                            <label class="switch" id="esadmin-text">
+                                <input type="checkbox" id="check-es-admin" name="esAdmin" onchange="actualizarTextoAdmin(this)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeAddUserModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Crear Usuario</button>
+            </div>
+        </form>
+    </div>
+</div>
 @section Scripts {
     <script src="~/js/settings.js" asp-append-version="true"></script>
 }

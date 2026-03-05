@@ -9,7 +9,7 @@ namespace ProyectoSyncro.Controllers
     {
         private SettingsRepository repo;
         private BaseRepository baseRepo;
-        public SettingsController(SettingsRepository repo, BaseRepository baseRepo): base (baseRepo)
+        public SettingsController(SettingsRepository repo, BaseRepository baseRepo) : base(baseRepo)
         {
             this.repo = repo;
             this.baseRepo = baseRepo;
@@ -77,6 +77,25 @@ namespace ProyectoSyncro.Controllers
             catch (Exception ex)
             {
                 return BadRequest("Ocurrió un error al intentar actualizar el perfil.");
+            }
+        }
+
+        public async Task<IActionResult> CreateUser(string nombre, string email, string password, bool esAdmin)
+        {
+            var user = HttpContext.Session.GetObject<UserSession>("User");
+            if (user == null) return Unauthorized();
+            try
+            {
+
+                await this.repo.CreateUserAsync(user.IdEmpresa, nombre,
+                    email, esAdmin, password);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar actualizar el perfil.");
+
             }
         }
     }

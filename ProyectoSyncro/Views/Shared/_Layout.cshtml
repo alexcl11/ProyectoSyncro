@@ -139,7 +139,7 @@
                     Ajustes
                 </a>
                 @{
-                    if (ViewData["Title"] != null)
+                    if (ViewData["Title"] != null || ViewData["Title"] != "Ajustes")
                     {                        
                         <button type="button" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="openColumnModal()">
                             <svg class="nav-icon" viewBox="0 0 24 24">
