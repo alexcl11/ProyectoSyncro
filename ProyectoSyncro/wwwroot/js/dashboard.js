@@ -444,6 +444,7 @@ function getTablasABorrar() {
         if (result.isConfirmed) {
             Swal.fire({
                 title: '¡Destruidas!',
+                heightAuto: false,
                 text: 'Las tablas han sido eliminadas por completo.',
                 icon: 'success',
                 timer: 1500,
@@ -494,6 +495,7 @@ function eliminarColumna(nombreTabla, nombreColumna) {
         if (result.isConfirmed) {
             Swal.fire({
                 title: '¡Eliminada!',
+                heightAuto: false,
                 text: 'La columna y sus datos han sido borrados.',
                 icon: 'success',
                 timer: 1500,
@@ -664,3 +666,33 @@ function guardarEdicionColumna(event) {
             });
         });
 }
+
+// ==========================================
+// MENÚ DE 3 PUNTOS EN COLUMNAS
+// ==========================================
+function toggleColumnMenu(event, menuId) {
+    // 1. Evitamos que el clic se propague y cierre el menú inmediatamente
+    event.stopPropagation();
+
+    // 2. Cerramos cualquier otro menú que estuviera abierto
+    document.querySelectorAll('.column-dropdown').forEach(menu => {
+        if (menu.id !== menuId) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // 3. Abrimos/Cerramos el menú al que hemos hecho clic
+    var menu = document.getElementById(menuId);
+    if (menu.style.display === 'flex') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'flex';
+    }
+}
+
+// Escuchamos los clics en todo el documento para cerrar el menú si se hace clic fuera
+document.addEventListener('click', function (event) {
+    document.querySelectorAll('.column-dropdown').forEach(menu => {
+        menu.style.display = 'none';
+    });
+});

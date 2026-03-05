@@ -66,7 +66,7 @@ namespace ProyectoSyncro.Controllers
             try
             {
 
-                await this.repo.UpdateUsuarioAsync(user.IdUsuario, user.IdEmpresa, nombreUser,
+                await this.repo.UpdateUserAsync(user.IdUsuario, user.IdEmpresa, nombreUser,
                     email, user.Admin);
 
                 user.Nombre = nombreUser;
@@ -96,6 +96,48 @@ namespace ProyectoSyncro.Controllers
             {
                 return BadRequest("Ocurrió un error al intentar actualizar el perfil.");
 
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateUsuarioEquipo(int idUsuario, string nombreUser, string email, string esAdmin)
+        {
+            var user = HttpContext.Session.GetObject<UserSession>("User");
+            if (user == null || !user.Admin) return Unauthorized("No tienes permisos.");
+
+            // Checkbox devuelve "on" si está marcado
+            bool isAdmin = (esAdmin == "on");
+
+            try
+            {
+                await this.repo.UpdateUserAsync(idUsuario, user.IdEmpresa, nombreUser, email, isAdmin);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error al actualizar el usuario.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteUsuarioEquipo(int idUsuario)
+        {
+            var user = HttpContext.Session.GetObject<UserSession>("User");
+            if (user == null || !user.Admin) return Unauthorized("No tienes permisos.");
+
+            if (user.IdUsuario == idUsuario)
+            {
+                return BadRequest("No puedes eliminar tu propia cuenta de administrador.");
+            }
+
+            try
+            {
+                await this.repo.DeleteUserAsync(idUsuario, user.IdEmpresa);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error al eliminar el usuario: "+ex.Message);
             }
         }
     }

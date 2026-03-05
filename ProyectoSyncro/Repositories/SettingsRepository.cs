@@ -51,7 +51,7 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
-        public async Task UpdateUsuarioAsync(int idUsuario, int idEmpresa, string nombre, 
+        public async Task UpdateUserAsync(int idUsuario, int idEmpresa, string nombre, 
            string email, bool esAdmin)
         {
             string sql = "SP_UPDATE_USER @IdUsuario, @IdEmpresa, @nombre, @email, @esAdmin";
@@ -104,6 +104,26 @@ namespace ProyectoSyncro.Repositories
                 com.Parameters.Add(paramEsAdmin);
                 com.Parameters.Add(paramSalt);
                 com.Parameters.Add(paramPasswordHash);
+
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
+
+        public async Task DeleteUserAsync(int idUsuario, int idEmpresa) 
+        {
+            string sql = "SP_DELETE_USER";
+            SqlParameter paramIdUsuario = new SqlParameter("@IdUsuario", idUsuario);
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdUsuario);
+                com.Parameters.Add(paramIdEmpresa);
 
                 await com.Connection.OpenAsync();
                 await com.ExecuteNonQueryAsync();

@@ -126,22 +126,33 @@
                                     @colDef.Nombre
                                 </div>
 
-                                <div style="display: flex; gap: 4px;">
-                                    <button type="button" style="background: transparent; border: none; padding: 2px; cursor: pointer; color: var(--brand);"
-                                            onclick="editarColumna('@colDef.Nombre', '@colDef.TipoDato')" title="Editar columna">
-                                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                            <path d="M12 20h9"></path>
-                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                <div class="column-menu-container">
+                                    <button type="button" class="btn-icon" style="color: var(--text-muted); padding: 4px;"
+                                            onclick="toggleColumnMenu(event, 'menu-col-@colDef.Nombre.Replace(" ", "")')" title="Opciones">
+                                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                            <circle cx="12" cy="12" r="1"></circle>
+                                            <circle cx="12" cy="5" r="1"></circle>
+                                            <circle cx="12" cy="19" r="1"></circle>
                                         </svg>
                                     </button>
 
-                                    <button type="button" style="background: transparent; border: none; padding: 2px; cursor: pointer; color: #94a3b8;"
-                                            onclick="eliminarColumna('@ViewData["Title"]', '@colDef.Nombre')" title="Eliminar columna">
-                                        <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                        </svg>
-                                    </button>
+                                    <div id="menu-col-@colDef.Nombre.Replace(" ", "")" class="column-dropdown">
+                                        <button type="button" class="dropdown-item text-brand" onclick="editarColumna('@colDef.Nombre', '@colDef.TipoDato')">
+                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                <path d="M12 20h9"></path>
+                                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                            </svg>
+                                            Editar
+                                        </button>
+
+                                        <button type="button" class="dropdown-item text-danger" onclick="eliminarColumna('@ViewData["Title"]', '@colDef.Nombre')">
+                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            </svg>
+                                            Eliminar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </th>

@@ -2,11 +2,9 @@
 // NAVEGACIÓN DE PESTAÑAS (TABS)
 // ==========================================
 function switchTab(button, tabId) {
-    // 1. Desactivar todos los botones y ocultar tarjetas
     document.querySelectorAll('.settings-nav-item').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.settings-card').forEach(card => card.style.display = 'none');
 
-    // 2. Activar el botón pulsado y mostrar su tarjeta
     button.classList.add('active');
     document.getElementById('tab-' + tabId).style.display = 'block';
 }
@@ -14,77 +12,60 @@ function switchTab(button, tabId) {
 // ==========================================
 // PESTAÑA: EMPRESA
 // ==========================================
-
-// Cambia visualmente el texto y color del interruptor
 function actualizarTextoEstado(checkbox) {
     const labelTexto = document.getElementById('estado-text');
-
     if (checkbox.checked) {
         labelTexto.textContent = 'Activa';
-        labelTexto.style.color = '#10b981'; // Verde
+        labelTexto.style.color = '#10b981';
     } else {
         labelTexto.textContent = 'Inactiva';
-        labelTexto.style.color = '#64748b'; // Gris
+        labelTexto.style.color = '#64748b';
     }
 }
 
-// Guarda los datos de la empresa por AJAX
 function guardarEmpresa(event) {
-    event.preventDefault(); // Evita recargar la página
-
-    var form = document.getElementById('formEmpresa');
-    var formData = new FormData(form);
+    event.preventDefault();
+    var formData = new FormData(document.getElementById('formEmpresa'));
 
     Swal.fire({
         title: 'Guardando...',
         heightAuto: false,
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        didOpen: () => { Swal.showLoading(); }
     });
 
-    fetch('/Settings/UpdateEmpresa', {
-        method: 'POST',
-        body: formData
-    })
+    fetch('/Settings/UpdateEmpresa', { method: 'POST', body: formData })
         .then(response => {
-            if (!response.ok) {
-                return response.text().then(msg => { throw new Error(msg); });
-            }
+            if (!response.ok) return response.text().then(msg => { throw new Error(msg); });
             return response;
         })
         .then(() => {
             Swal.fire({
                 title: '¡Actualizado!',
-                heightAuto: false,
                 text: 'Los datos de la empresa han sido guardados.',
                 icon: 'success',
+                heightAuto: false,
                 timer: 1500,
                 showConfirmButton: false
-            }).then(() => {
-                // Recargamos la página. Al recargar, el _Layout leerá la nueva sesión
-                // y tu nombre abajo a la izquierda habrá cambiado mágicamente.
-                window.location.reload();
-            });;
+            }).then(() => window.location.reload());
         })
         .catch(error => {
             Swal.fire({
                 title: 'Error',
                 text: error.message,
                 icon: 'error',
+                heightAuto: false,
                 confirmButtonColor: '#dc2626'
             });
         });
 }
+
 // ==========================================
 // PESTAÑA: MI PERFIL
 // ==========================================
 function guardarPerfil(event) {
     event.preventDefault();
-
-    var form = event.target; // Capturamos el formulario que lanzó el evento
-    var formData = new FormData(form);
+    var formData = new FormData(event.target);
 
     Swal.fire({
         title: 'Actualizando perfil...',
@@ -93,10 +74,7 @@ function guardarPerfil(event) {
         didOpen: () => { Swal.showLoading(); }
     });
 
-    fetch('/Settings/UpdatePerfil', {
-        method: 'POST',
-        body: formData
-    })
+    fetch('/Settings/UpdatePerfil', { method: 'POST', body: formData })
         .then(response => {
             if (!response.ok) throw new Error("Error al actualizar");
             return response;
@@ -108,97 +86,156 @@ function guardarPerfil(event) {
                 heightAuto: false,
                 timer: 1500,
                 showConfirmButton: false
-            }).then(() => {
-                // Recargamos la página. Al recargar, el _Layout leerá la nueva sesión
-                // y tu nombre abajo a la izquierda habrá cambiado mágicamente.
-                window.location.reload();
-            });
+            }).then(() => window.location.reload());
         })
         .catch(error => {
-            Swal.fire('Error', error.message, 'error');
+            Swal.fire({ title: 'Error', text: error.message, icon: 'error', heightAuto: false });
         });
 }
 
-// --- FUNCIONES DEL MODAL DE NUEVO USUARIO ---
-
-// 1. Abrir Modal
+// ==========================================
+// GESTIÓN DE EQUIPO: CREAR USUARIO
+// ==========================================
 function openAddUserModal() {
-    // Reseteamos el formulario al abrir
     document.getElementById('formNewUser').reset();
-    document.getElementById('check-es-admin').checked = false; // Por defecto No es admin
-
+    document.getElementById('check-es-admin').checked = false;
     document.getElementById('newUserModal').classList.add('active');
 }
 
-// 2. Cerrar Modal
 function closeAddUserModal() {
     document.getElementById('newUserModal').classList.remove('active');
 }
 
-// 3. Efecto visual (Opcional, si quieres cambiar algún texto al activar el Switch)
 function actualizarTextoAdmin(checkbox) {
     const labelTexto = document.getElementById('esadmin-text');
-
     if (checkbox.checked) {
         labelTexto.textContent = 'Activa';
-        labelTexto.style.color = '#10b981'; // Verde
+        labelTexto.style.color = '#10b981';
     } else {
         labelTexto.textContent = 'Inactiva';
-        labelTexto.style.color = '#64748b'; // Gris
+        labelTexto.style.color = '#64748b';
     }
 }
 
-// 4. Enviar Datos por AJAX a C#
 function guardarNuevoUsuario(event) {
     event.preventDefault();
-
-    var form = document.getElementById('formNewUser');
-    var formData = new FormData(form);
-
-    // Como el checkbox solo manda valor si está "on", le forzamos el Booleano para C#
+    var formData = new FormData(document.getElementById('formNewUser'));
     var esAdmin = document.getElementById('check-es-admin').checked;
-    formData.set('esAdmin', esAdmin); // Sobrescribimos con true/false
+    formData.set('esAdmin', esAdmin);
 
-    // Mostramos estado de carga
     Swal.fire({
         title: 'Creando usuario...',
         allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+        heightAuto: false,
+        didOpen: () => { Swal.showLoading(); }
     });
 
-    // Enviamos al Controlador (Asegúrate de que la ruta apunta a tu controlador correcto)
-    fetch('/Settings/CreateUser', {
-        method: 'POST',
-        body: formData
-    })
+    fetch('/Settings/CreateUser', { method: 'POST', body: formData })
         .then(response => {
-            if (!response.ok) {
-                return response.text().then(msg => { throw new Error(msg); });
-            }
+            if (!response.ok) return response.text().then(msg => { throw new Error(msg); });
             return response;
         })
         .then(() => {
-            closeAddUserModal(); // Cerramos el modal primero
-
+            closeAddUserModal();
             Swal.fire({
                 title: '¡Usuario creado!',
                 text: 'El nuevo miembro del equipo ha sido añadido.',
                 icon: 'success',
+                heightAuto: false,
                 timer: 1500,
                 showConfirmButton: false
-            }).then(() => {
-                window.location.reload(); // Recargamos para ver al usuario en la tabla
-            });
+            }).then(() => window.location.reload());
         })
         .catch(error => {
             Swal.fire({
                 title: 'No se pudo crear',
                 text: error.message,
                 icon: 'error',
-                confirmButtonText: 'Entendido',
+                heightAuto: false,
                 confirmButtonColor: '#dc2626'
             });
         });
+}
+
+// ==========================================
+// GESTIÓN DE EQUIPO: EDITAR USUARIO
+// ==========================================
+function abrirModalEditarUsuario(btn) {
+    document.getElementById('edit-idUsuario').value = btn.getAttribute('data-id');
+    document.getElementById('edit-nombre').value = btn.getAttribute('data-nombre');
+    document.getElementById('edit-email').value = btn.getAttribute('data-email');
+    document.getElementById('edit-admin').checked = btn.getAttribute('data-admin') === 'true';
+
+    document.getElementById('editUserModal').classList.add('active');
+}
+
+function cerrarModalEditarUsuario() {
+    document.getElementById('editUserModal').classList.remove('active');
+}
+
+function guardarEdicionUsuario(event) {
+    event.preventDefault();
+    var formData = new FormData(document.getElementById('formEditUser'));
+
+    Swal.fire({ title: 'Guardando...', heightAuto: false, didOpen: () => { Swal.showLoading(); } });
+
+    fetch('/Settings/UpdateUsuarioEquipo', { method: 'POST', body: formData })
+        .then(response => {
+            if (!response.ok) return response.text().then(msg => { throw new Error(msg); });
+            return response;
+        })
+        .then(() => {
+            Swal.fire({
+                title: '¡Actualizado!',
+                icon: 'success',
+                heightAuto: false,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => window.location.reload());
+        })
+        .catch(error => Swal.fire({ title: 'Error', text: error.message, icon: 'error', heightAuto: false }));
+}
+
+// ==========================================
+// GESTIÓN DE EQUIPO: ELIMINAR USUARIO
+// ==========================================
+function eliminarUsuario(btn) {
+    var idUsuario = btn.getAttribute('data-id');
+    var nombreUsuario = btn.getAttribute('data-nombre');
+
+    Swal.fire({
+        title: '¿Eliminar a ' + nombreUsuario + '?',
+        text: "Perderá el acceso a la empresa inmediatamente.",
+        icon: 'warning',
+        heightAuto: false,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Eliminando...', heightAuto: false, didOpen: () => { Swal.showLoading(); } });
+
+            var formData = new FormData();
+            formData.append('idUsuario', idUsuario);
+
+            fetch('/Settings/DeleteUsuarioEquipo', { method: 'POST', body: formData })
+                .then(response => {
+                    if (!response.ok) return response.text().then(msg => { throw new Error(msg); });
+                    return response;
+                })
+                .then(() => {
+                    Swal.fire({
+                        title: 'Eliminado',
+                        text: 'El usuario ha sido eliminado.',
+                        icon: 'success',
+                        heightAuto: false,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => window.location.reload());
+                })
+                .catch(error => Swal.fire({ title: 'Error', text: error.message, icon: 'error', heightAuto: false }));
+        }
+    });
 }
