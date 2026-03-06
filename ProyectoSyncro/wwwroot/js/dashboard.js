@@ -696,3 +696,97 @@ document.addEventListener('click', function (event) {
         menu.style.display = 'none';
     });
 });
+
+
+// ==========================================
+// SISTEMA DE FILTROS DINÁMICOS
+// ==========================================
+function openFilterModal() {
+    document.getElementById('filterModal').classList.add('active');
+}
+
+function closeFilterModal() {
+    document.getElementById('filterModal').classList.remove('active');
+}
+
+// Esta función se ejecuta cada vez que el usuario cambia el desplegable de "Columna"
+function construirFiltroUI() {
+    var selectCol = document.getElementById('filterCol');
+    var selectOp = document.getElementById('filterOp');
+    var valContainer = document.getElementById('filterValContainer');
+
+    var selectedOption = selectCol.options[selectCol.selectedIndex];
+
+    // Si elige la opción por defecto "Elegir columna..."
+    if (!selectedOption.value) {
+        selectOp.innerHTML = '<option value="">---</option>';
+        selectOp.disabled = true;
+        valContainer.innerHTML = '<label class="settings-label">Valor</label><input type="text" class="form-control" disabled placeholder="---" />';
+        return;
+    }
+
+    var tipoDato = selectedOption.getAttribute('data-tipo');
+    var opcionesJson = selectedOption.getAttribute('data-opciones');
+
+    // 1. CONSTRUIR LAS CONDICIONES (OPERADORES) SEGÚN EL TIPO DE DATO
+    selectOp.disabled = false;
+    selectOp.innerHTML = '';
+
+    if (tipoDato === 'Texto') {
+        selectOp.innerHTML += '<option value="CONTAINS">Contiene</option>';
+        selectOp.innerHTML += '<option value="EQUALS">Es igual a</option>';
+        selectOp.innerHTML += '<option value="NOT_EQUALS">No es igual a</option>';
+    }
+    else if (tipoDato === 'Numero' || tipoDato === 'Decimal') {
+        selectOp.innerHTML += '<option value="EQUALS">Es igual a</option>';
+        selectOp.innerHTML += '<option value="GREATER">Es mayor que</option>';
+        selectOp.innerHTML += '<option value="LESS">Es menor que</option>';
+    }
+    else if (tipoDato === 'Fecha') {
+        selectOp.innerHTML += '<option value="EQUALS">Fecha exacta</option>';
+        selectOp.innerHTML += '<option value="GREATER">Después del</option>';
+        selectOp.innerHTML += '<option value="LESS">Antes del</option>';
+    }
+    else if (tipoDato === 'SiNo') {
+        selectOp.innerHTML += '<option value="EQUALS">Es</option>';
+    }
+    else if (tipoDato === 'Select' || tipoDato === 'Relacion') {
+        selectOp.innerHTML += '<option value="EQUALS">Es exactamente</option>';
+        selectOp.innerHTML += '<option value="NOT_EQUALS">No es</option>';
+    }
+
+    // 2. CONSTRUIR EL INPUT DE VALOR SEGÚN EL TIPO DE DATO
+    var htmlInput = '<label class="settings-label">Valor</label>';
+
+    if (tipoDato === 'Select') {
+        var opciones = JSON.parse(opcionesJson);
+        htmlInput += '<select name="filterVal" class="form-control" required><option value="">Elegir opción...</option>';
+        opciones.forEach(opt => { htmlInput += `<option value="${opt}">${opt}</option>`; });
+        htmlInput += '</select>';
+    }
+    else if (tipoDato === 'Relacion') {
+        var opcionesRel = JSON.parse(opcionesJson);
+        htmlInput += '<select name="filterVal" class="form-control" required><option value="">Elegir vínculo...</option>';
+        opcionesRel.forEach(opt => { htmlInput += `<option value="${opt.Id}">${opt.Valor}</option>`; });
+        htmlInput += '</select>';
+    }
+    else if (tipoDato === 'Fecha') {
+        htmlInput += '<input type="date" name="filterVal" class="form-control" required />';
+    }
+    else if (tipoDato === 'SiNo') {
+        htmlInput += `
+            <select name="filterVal" class="form-control" required>
+                <option value="1">Sí (Marcado)</option>
+                <option value="0">No (Desmarcado)</option>
+            </select>`;
+    }
+    else if (tipoDato === 'Numero' || tipoDato === 'Decimal') {
+        htmlInput += '<input type="number" step="any" name="filterVal" class="form-control" placeholder="Ej: 100" required />';
+    }
+    else {
+        // Por defecto: Texto
+        htmlInput += '<input type="text" name="filterVal" class="form-control" placeholder="Buscar..." required />';
+    }
+
+    valContainer.innerHTML = htmlInput;
+}

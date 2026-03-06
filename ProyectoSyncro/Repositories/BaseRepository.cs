@@ -43,7 +43,10 @@ namespace ProyectoSyncro.Repositories
             }
         }
 
-        public async Task<List<Dictionary<string, object>>> GetDatosTablaEmpresaAsync(int idEmpresa, string nombreTabla, string sortCol = "Id", string sortDir = "DESC")
+        public async Task<List<Dictionary<string, object>>> GetDatosTablaEmpresaAsync(
+    int idEmpresa, string nombreTabla,
+    string sortCol = "Id", string sortDir = "DESC",
+    string filterCol = null, string filterOp = null, string filterVal = null)
         {
             string sql = "SP_MOTRAR_TABLA_EMPRESA";
             var datos = new List<Dictionary<string, object>>();
@@ -53,31 +56,32 @@ namespace ProyectoSyncro.Repositories
                 com.CommandType = System.Data.CommandType.StoredProcedure;
                 com.CommandText = sql;
 
-                // Añadimos todos los parámetros
+                // Parámetros base
                 com.Parameters.Add(new SqlParameter("@IdEmpresa", idEmpresa));
                 com.Parameters.Add(new SqlParameter("@nombreTabla", nombreTabla));
                 com.Parameters.Add(new SqlParameter("@SortCol", string.IsNullOrEmpty(sortCol) ? "Id" : sortCol));
                 com.Parameters.Add(new SqlParameter("@SortDir", string.IsNullOrEmpty(sortDir) ? "DESC" : sortDir));
 
-                await com.Connection.OpenAsync();
+                // Parámetros de filtrado
+                com.Parameters.Add(new SqlParameter("@FilterCol", (object)filterCol ?? DBNull.Value));
+                com.Parameters.Add(new SqlParameter("@FilterOp", (object)filterOp ?? DBNull.Value));
+                com.Parameters.Add(new SqlParameter("@FilterVal", (object)filterVal ?? DBNull.Value));
 
+                await com.Connection.OpenAsync();
                 using (DbDataReader reader = await com.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
                         var fila = new Dictionary<string, object>();
-
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
                             string nombreColumna = reader.GetName(i);
                             object valorDato = reader.IsDBNull(i) ? null : reader.GetValue(i);
                             fila.Add(nombreColumna, valorDato);
                         }
-
                         datos.Add(fila);
                     }
-                } // El using del DbDataReader lo cierra automáticamente
-
+                }
                 await com.Connection.CloseAsync();
                 return datos;
             }

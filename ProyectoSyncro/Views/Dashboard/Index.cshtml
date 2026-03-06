@@ -37,12 +37,31 @@
     </div>
 
     <div style="display: flex; gap: 10px;">
-        <button class="btn btn-outline">
-            <svg class="icon" viewBox="0 0 24 24">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-            Filtrar
-        </button>
+        @{
+            bool isFiltered = !string.IsNullOrEmpty(ViewData["FilterCol"]?.ToString()) && !string.IsNullOrEmpty(ViewData["FilterVal"]?.ToString());
+            string fCol = ViewData["FilterCol"]?.ToString();
+            string fVal = ViewData["FilterVal"]?.ToString();
+        }
+
+        @if (isFiltered)
+        {
+            <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@ViewData["SortCol"]&sortDir=@ViewData["SortDir"]" class="btn" style="background-color: #fef2f2; color: #dc2626; border: 1px solid #dc2626; text-decoration: none;" title="Quitar filtro">
+                <svg class="icon" viewBox="0 0 24 24" style="stroke: currentColor;">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filtro: @fCol (@fVal)
+                <span style="margin-left: 6px; font-size: 1.1rem; line-height: 1;">&times;</span>
+            </a>
+        }
+        else
+        {
+            <button class="btn btn-outline" onclick="openFilterModal()">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filtrar
+            </button>
+        }
 
         @{
             string currentSortColTop = ViewData["SortCol"]?.ToString() ?? "Id";
@@ -60,15 +79,6 @@
                 <span style="margin-left: 6px; font-size: 1.1rem; line-height: 1;">&times;</span>
             </a>
         }
-        @* else
-        {
-            <button class="btn btn-outline" style="opacity: 0.6; cursor: help;" title="Usa el menú de los 3 puntos en cualquier columna para ordenar">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
-                </svg>
-                Ordenar
-            </button>
-        } *@
         <button class="btn btn-primary" onclick="openRecordModal()" type="button">
             <svg class="icon" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -650,6 +660,86 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeEditColumnModal()">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-overlay" id="filterModal">
+    <div class="modal-card" style="max-width: 600px;">
+        <form id="formFilter" method="get" action="/Dashboard/Index">
+
+            <input type="hidden" name="tabla" value="@ViewData["Title"]" />
+            <input type="hidden" name="sortCol" value="@ViewData["SortCol"]" />
+            <input type="hidden" name="sortDir" value="@ViewData["SortDir"]" />
+
+            <div class="modal-header">
+                <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px; color: var(--brand);">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    Filtrar registros
+                </h3>
+                <button type="button" class="modal-close" onclick="closeFilterModal()">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Crea una regla para mostrar solo los registros que coincidan con tu búsqueda.
+                </p>
+
+                <div style="display: flex; gap: 12px; align-items: flex-end;">
+
+                    <div class="form-group" style="flex: 1;">
+                        <label class="settings-label">Columna</label>
+                        <select name="filterCol" id="filterCol" class="form-control" onchange="construirFiltroUI()" required>
+                            <option value="">Elegir columna...</option>
+                            @if (definicionColumnas != null)
+                            {
+                                foreach (var col in definicionColumnas)
+                                {
+                                    if (col.Nombre.ToLower() == "id" || col.Nombre.ToLower() == "fechacreacion") continue;
+
+                                    string opcionesJson = "[]";
+                                    if (col.TipoDato == "Select" && opcionesSelect != null && opcionesSelect.ContainsKey(col.Nombre))
+                                    {
+                                        opcionesJson = System.Text.Json.JsonSerializer.Serialize(opcionesSelect[col.Nombre].Select(o => o.Valor));
+                                    }
+                                    else if (col.TipoDato == "Relacion" && opcionesRelacion != null && opcionesRelacion.ContainsKey(col.Nombre))
+                                    {
+                                        opcionesJson = System.Text.Json.JsonSerializer.Serialize(opcionesRelacion[col.Nombre].Select(k => new { Id = k.Key, Valor = k.Value }));
+                                    }
+
+                                    <option value="@col.Nombre" data-tipo="@col.TipoDato" data-opciones="@opcionesJson">
+                                        @col.Nombre
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="flex: 1;">
+                        <label class="settings-label">Condición</label>
+                        <select name="filterOp" id="filterOp" class="form-control" disabled required>
+                            <option value="">---</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="flex: 1.5;" id="filterValContainer">
+                        <label class="settings-label">Valor</label>
+                        <input type="text" class="form-control" disabled placeholder="---" />
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a href="/Dashboard/Index?tabla=@ViewData["Title"]" class="btn btn-outline" style="text-decoration: none; color: #dc2626;">Limpiar filtro</a>
+                <button type="submit" class="btn btn-primary">Aplicar filtro</button>
             </div>
         </form>
     </div>

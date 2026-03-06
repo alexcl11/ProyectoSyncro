@@ -14,40 +14,51 @@ namespace ProyectoSyncro.Controllers
             this.repo = repo;
         }
 
-        public async Task<IActionResult> Index(string tabla, string sortCol = "Id", string sortDir = "DESC")
+        [HttpGet]
+        public async Task<IActionResult> Index(
+    string tabla,
+    string sortCol = "Id", string sortDir = "DESC",
+    string filterCol = null, string filterOp = null, string filterVal = null)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            var user = HttpContext.Session.GetObject<UserSession>("User");
+            if (user == null) return RedirectToAction("Login", "Auth");
+
+            int idEmpresa = user.IdEmpresa;
+            List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+
+            if (tabla != null && tablas.Contains(tabla))
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
-                if (tabla != null && tablas.Contains(tabla))
-                {
-                    List<Dictionary<string, object>> datos = 
-                        await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla, sortCol, sortDir);
-                    var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
-                    var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
-                    var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
+                // 1. Cargamos los datos pasando los parámetros de ordenación Y FILTRADO
+                List<Dictionary<string, object>> datos =
+                    await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla, sortCol, sortDir, filterCol, filterOp, filterVal);
 
-                    ViewData["NombreUser"] = HttpContext.Session.GetObject<UserSession>("User").Nombre;
-                    ViewData["TablasEmpresa"] = tablas;
-                    ViewData["Title"] = tabla;
-                    ViewData["Columnas"] = columnas;
-                    ViewData["OpcionesSelect"] = opciones;
-                    ViewData["OpcionesRelacion"] = relaciones;
-                    ViewData["SortCol"] = sortCol;
-                    ViewData["SortDir"] = sortDir;
+                // 2. Cargamos metadatos de la tabla
+                var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
+                var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
+                var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
 
-                    return View(datos);
-                } else
-                {
-                    return View();
-                }
+                ViewData["NombreUser"] = user.Nombre;
+                ViewData["TablasEmpresa"] = tablas;
+                ViewData["Title"] = tabla;
+                ViewData["Columnas"] = columnas;
+                ViewData["OpcionesSelect"] = opciones;
+                ViewData["OpcionesRelacion"] = relaciones;
+
+                // 3. Guardamos estado de Ordenación
+                ViewData["SortCol"] = sortCol;
+                ViewData["SortDir"] = sortDir;
+
+                // 4. Guardamos estado de Filtrado
+                ViewData["FilterCol"] = filterCol;
+                ViewData["FilterOp"] = filterOp;
+                ViewData["FilterVal"] = filterVal;
+
+                return View(datos);
             }
             else
             {
-                return RedirectToAction("Login", "Auth");
+                return View();
             }
-                
         }
 
         [HttpPost]
