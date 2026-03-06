@@ -14,7 +14,7 @@ namespace ProyectoSyncro.Controllers
             this.repo = repo;
         }
 
-        public async Task<IActionResult> Index(string tabla)
+        public async Task<IActionResult> Index(string tabla, string sortCol = "Id", string sortDir = "DESC")
         {
             if (HttpContext.Session.GetObject<UserSession>("User") != null)
             {
@@ -23,7 +23,7 @@ namespace ProyectoSyncro.Controllers
                 if (tabla != null && tablas.Contains(tabla))
                 {
                     List<Dictionary<string, object>> datos = 
-                        await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla);
+                        await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla, sortCol, sortDir);
                     var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
                     var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
                     var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
@@ -34,7 +34,9 @@ namespace ProyectoSyncro.Controllers
                     ViewData["Columnas"] = columnas;
                     ViewData["OpcionesSelect"] = opciones;
                     ViewData["OpcionesRelacion"] = relaciones;
-                
+                    ViewData["SortCol"] = sortCol;
+                    ViewData["SortDir"] = sortDir;
+
                     return View(datos);
                 } else
                 {

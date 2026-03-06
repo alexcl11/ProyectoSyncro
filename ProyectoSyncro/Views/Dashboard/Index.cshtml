@@ -43,12 +43,32 @@
             </svg>
             Filtrar
         </button>
-        <button class="btn btn-outline">
-            <svg class="icon" viewBox="0 0 24 24">
-                <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
-            </svg>
-            Ordenar
-        </button>
+
+        @{
+            string currentSortColTop = ViewData["SortCol"]?.ToString() ?? "Id";
+            string currentSortDirTop = ViewData["SortDir"]?.ToString() ?? "DESC";
+            bool isSorted = currentSortColTop != "Id" && currentSortColTop != "fechacreacion";
+        }
+
+        @if (isSorted)
+        {
+            <a href="/Dashboard/Index?tabla=@ViewData["Title"]" class="btn" style="background-color: #eef2ff; color: var(--brand); border: 1px solid var(--brand); text-decoration: none;" title="Quitar ordenación">
+                <svg class="icon" viewBox="0 0 24 24" style="stroke: currentColor;">
+                    <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
+                </svg>
+                Ordenado por @currentSortColTop
+                <span style="margin-left: 6px; font-size: 1.1rem; line-height: 1;">&times;</span>
+            </a>
+        }
+        @* else
+        {
+            <button class="btn btn-outline" style="opacity: 0.6; cursor: help;" title="Usa el menú de los 3 puntos en cualquier columna para ordenar">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
+                </svg>
+                Ordenar
+            </button>
+        } *@
         <button class="btn btn-primary" onclick="openRecordModal()" type="button">
             <svg class="icon" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -119,11 +139,23 @@
                     {
                         string iconoSvg = GetIconoPorTipoDato(colDef.TipoDato);
 
+                        // Recuperamos el estado de ordenación actual
+                        string currentSortCol = ViewData["SortCol"]?.ToString();
+                        string currentSortDir = ViewData["SortDir"]?.ToString();
+                        bool isSortedByMe = currentSortCol == colDef.Nombre;
+
                         <th>
                             <div class="th-content" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                                 <div style="display: flex; align-items: center; gap: 6px;">
                                     @Html.Raw(iconoSvg)
                                     @colDef.Nombre
+
+                                    @if (isSortedByMe)
+                                    {
+                                        <span style="color: var(--brand); font-size: 0.8rem; margin-left: 4px;">
+                                            @(currentSortDir == "ASC" ? "↑" : "↓")
+                                        </span>
+                                    }
                                 </div>
 
                                 <div class="column-menu-container">
@@ -137,12 +169,28 @@
                                     </button>
 
                                     <div id="menu-col-@colDef.Nombre.Replace(" ", "")" class="column-dropdown">
+                                        <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@colDef.Nombre&sortDir=ASC" class="dropdown-item" style="text-decoration: none; color: var(--text-main);">
+                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
+                                            </svg>
+                                            Ordenar A-Z / Menor a Mayor
+                                        </a>
+
+                                        <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@colDef.Nombre&sortDir=DESC" class="dropdown-item" style="text-decoration: none; color: var(--text-main);">
+                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                <path d="M11 19h10M11 15h7M11 11h4M3 7l4-4 4 4M7 3v18"></path>
+                                            </svg>
+                                            Ordenar Z-A / Mayor a Menor
+                                        </a>
+
+                                        <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);" />
+
                                         <button type="button" class="dropdown-item text-brand" onclick="editarColumna('@colDef.Nombre', '@colDef.TipoDato')">
                                             <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
                                                 <path d="M12 20h9"></path>
                                                 <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                             </svg>
-                                            Editar
+                                            Editar Columna
                                         </button>
 
                                         <button type="button" class="dropdown-item text-danger" onclick="eliminarColumna('@ViewData["Title"]', '@colDef.Nombre')">
@@ -150,7 +198,7 @@
                                                 <polyline points="3 6 5 6 21 6"></polyline>
                                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                             </svg>
-                                            Eliminar
+                                            Eliminar Columna
                                         </button>
                                     </div>
                                 </div>
