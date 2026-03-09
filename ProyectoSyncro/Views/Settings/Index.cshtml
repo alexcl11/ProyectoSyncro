@@ -82,6 +82,18 @@
                     <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 }
             </form>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border);" />
+
+            <div style="background: #fef2f2; border: 1px solid #f87171; border-radius: 12px; padding: 20px;">
+                <h4 style="color: #991b1b; margin-top: 0; margin-bottom: 8px;">Zona de Peligro</h4>
+                <p style="font-size: 0.85rem; color: #b91c1c; margin-bottom: 16px;">
+                    Eliminar la empresa borrará permanentemente todos los usuarios, tablas, columnas y registros asociados. Esta acción <b>no se puede deshacer</b>.
+                </p>
+                <button type="button" class="btn" style="background: #dc2626; color: white; border: none;" onclick="confirmarEliminarEmpresa()">
+                    <svg class="icon" viewBox="0 0 24 24" style="margin-right: 6px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Eliminar Empresa Definitivamente
+                </button>
+            </div>
         </section>
 
         @if (esAdmin)

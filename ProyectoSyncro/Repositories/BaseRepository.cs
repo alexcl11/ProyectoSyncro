@@ -555,5 +555,7 @@ namespace ProyectoSyncro.Repositories
                 await com.Connection.CloseAsync();
             }
         }
+
+        
     }
 }

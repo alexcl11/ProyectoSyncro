@@ -239,3 +239,61 @@ function eliminarUsuario(btn) {
         }
     });
 }
+
+function confirmarEliminarEmpresa() {
+    Swal.fire({
+        title: '¿Estás completamente seguro?',
+        text: "Se borrarán todos los datos, tablas y usuarios de la empresa. ¡No podrás revertir esto!",
+        icon: 'warning',
+        heightAuto: false, 
+        input: 'text',
+        inputPlaceholder: 'Escribe ELIMINAR para confirmar',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar todo',
+        cancelButtonText: 'Cancelar',
+        // Validamos que haya escrito la palabra exacta
+        preConfirm: (inputValue) => {
+            if (inputValue !== 'ELIMINAR') {
+                Swal.showValidationMessage('Debes escribir la palabra ELIMINAR en mayúsculas para confirmar.');
+                return false;
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            Swal.fire({
+                title: 'Eliminando empresa...',
+                text: 'Por favor, no cierres esta ventana.',
+                heightAuto: false, 
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Llamamos al backend para destruir los datos
+            fetch('/Settings/DeleteEmpresa', { // Ajusta el controlador si no es Settings
+                method: 'POST'
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al eliminar la empresa');
+                    return response.json();
+                })
+                .then(data => {
+                    Swal.fire({
+                        title: 'Empresa eliminada',
+                        text: 'Serás redirigido al inicio de sesión.',
+                        heightAuto: false, 
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.url; // Redirigimos al Login
+                    });
+                })
+                .catch(error => {
+                    Swal.fire('Error', error.message, 'error');
+                });
+        }
+    });
+}

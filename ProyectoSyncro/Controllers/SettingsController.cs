@@ -140,5 +140,28 @@ namespace ProyectoSyncro.Controllers
                 return BadRequest("Error al eliminar el usuario: "+ex.Message);
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteEmpresa()
+        {
+            var user = HttpContext.Session.GetObject<UserSession>("User");
+            if (user == null) return Unauthorized();
+
+            try
+            {
+                // 1. Borramos la empresa de la base de datos
+                await this.repo.DeleteEmpresaAsync(user.IdEmpresa);
+
+                // 2. Destruimos la sesión del usuario
+                HttpContext.Session.Clear();
+
+                // 3. Devolvemos la URL del Login para que JS redirija
+                return Ok(new { url = Url.Action("Login", "Auth") });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("No se pudo eliminar la empresa.");
+            }
+        }
     }
 }

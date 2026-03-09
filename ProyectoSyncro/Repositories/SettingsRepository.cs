@@ -130,5 +130,22 @@ namespace ProyectoSyncro.Repositories
                 await com.Connection.CloseAsync();
             }
         }
+
+        public async Task DeleteEmpresaAsync(int idEmpresa)
+        {
+            string sql = "SP_DELETE_EMPRESA";
+            SqlParameter paramIdEmpresa = new SqlParameter("@IdEmpresa", idEmpresa);
+
+            using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
+            {
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+                com.CommandText = sql;
+
+                com.Parameters.Add(paramIdEmpresa);
+                await com.Connection.OpenAsync();
+                await com.ExecuteNonQueryAsync();
+                await com.Connection.CloseAsync();
+            }
+        }
     }
 }
