@@ -191,6 +191,7 @@ function deleteRegistro(nombreTabla, idFila) {
         title: '¿Eliminar registros?',
         text: `Vas a eliminar un registro. Esta acción no se puede deshacer.`,
         icon: 'warning',
+        heightAuto: false, 
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#64748b',
@@ -789,4 +790,229 @@ function construirFiltroUI() {
     }
 
     valContainer.innerHTML = htmlInput;
+}
+
+
+let vistaActual = 'tabla';
+
+// FUNCIÓN PRINCIPAL PARA CAMBIAR DE VISTA
+function changeView(viewName) {
+    // 1. Validaciones previas
+    if (viewName === 'calendario') {
+        if (colsFecha.length === 0) {
+            Swal.fire({
+                title: 'No hay columnas de fecha',
+                heightAuto: false, 
+                text: 'Para usar la vista de Calendario, primero debes crear al menos una columna de tipo "Fecha" en tu tabla.',
+                icon: 'info',
+                confirmButtonColor: '#64748b'
+            });
+            return; // Detenemos el cambio de vista
+        }
+    }
+
+    if (viewName === 'kanban') {
+        if (colsSelect.length === 0) {
+            Swal.fire({
+                title: 'No hay etiquetas desplegables',
+                heightAuto: false, 
+                text: 'El tablero Kanban necesita organizar los datos por columnas. Crea primero una columna de tipo "Select (Desplegable)" (ej: Estado, Prioridad).',
+                icon: 'info',
+                confirmButtonColor: '#64748b'
+            });
+            return; // Detenemos el cambio de vista
+        }
+    }
+
+    // 2. Cambiamos la apariencia de las pestañas
+    document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+    document.getElementById('tab-' + viewName).classList.add('active');
+
+    // 3. Ocultamos todas las vistas y mostramos la seleccionada
+    document.getElementById('vista-tabla').style.display = 'none';
+    document.getElementById('vista-calendario').style.display = 'none';
+    document.getElementById('vista-kanban').style.display = 'none';
+    document.getElementById('vista-' + viewName).style.display = 'block';
+
+    // 4. Manejamos el Submenú
+    vistaActual = viewName;
+    var submenu = document.getElementById('view-submenu');
+    var selectSubmenu = document.getElementById('view-submenu-select');
+
+    if (viewName === 'tabla') {
+        submenu.style.display = 'none'; // En la tabla no agrupamos por ahora
+    } else {
+        submenu.style.display = 'flex';
+        selectSubmenu.innerHTML = ''; // Limpiamos opciones
+
+        let columnasAUsar = viewName === 'calendario' ? colsFecha : colsSelect;
+
+        // Llenamos el select con las columnas compatibles
+        columnasAUsar.forEach(col => {
+            var option = document.createElement('option');
+            option.value = col;
+            option.text = col;
+            selectSubmenu.appendChild(option);
+        });
+
+        // Llamamos a la función que renderizará los datos reales
+        renderCurrentView();
+    }
+}
+
+let fullCalendarInstance = null; 
+
+// --- 1. FUNCIÓN REUTILIZABLE PARA LA FICHA DEL SWEETALERT ---
+function mostrarFichaRegistro(datosFila, tituloRegistro) {
+    var detallesHTML = '<div style="text-align: left; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; max-height: 300px; overflow-y: auto;">';
+    
+    for (var columna in datosFila) {
+        var valor = datosFila[columna];
+        
+        if (columna !== 'Id' && columna.toLowerCase() !== 'fechacreacion' && valor !== null && valor !== '') {
+
+            if (typeof valor === 'string' && valor.includes('T00:00:00')) {
+                valor = valor.split('T')[0];
+            }
+
+            var valorString = String(valor);
+            if (dictRelaciones && dictRelaciones[columna] && dictRelaciones[columna][valorString]) {
+                valor = dictRelaciones[columna][valorString];
+            }
+
+            detallesHTML += `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                    <span style="font-weight: 600; color: var(--text-main); font-size: 0.85rem;">${columna}:</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem; text-align: right; max-width: 60%; word-break: break-word;">${valor}</span>
+                </div>`;
+        }
+    }
+    detallesHTML += '</div>';
+
+    Swal.fire({
+        title: tituloRegistro,
+        html: detallesHTML,
+        heightAuto: false, 
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#64748b'
+    });
+}
+
+// --- 2. RENDERIZADO PRINCIPAL DE LAS VISTAS ---
+function renderCurrentView() {
+    var columnaSeleccionada = document.getElementById('view-submenu-select').value;
+    
+    // ============================================
+    // VISTA CALENDARIO
+    // ============================================
+    if (vistaActual === 'calendario') {
+        var calendarEl = document.getElementById('calendar-container');
+        var calendarEvents = [];
+
+        tableDataRaw.forEach(function(fila) {
+            var fechaRegistro = fila[columnaSeleccionada];
+            if (fechaRegistro) {
+                var titulo = fila[colTituloPorDefecto] || ('Registro #' + fila['Id']);
+                calendarEvents.push({
+                    id: fila['Id'], title: String(titulo), start: fechaRegistro,
+                    allDay: true, backgroundColor: '#3b82f6', borderColor: '#2563eb',
+                    extendedProps: { filaCompleta: fila }
+                });
+            }
+        });
+
+        if (fullCalendarInstance) fullCalendarInstance.destroy();
+
+        fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth', locale: 'es', height: 'auto', firstDay: 1, 
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+            buttonText: {
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                list: 'Lista'
+            },
+            allDayText: 'Todo el día',
+            events: calendarEvents, 
+            // Usamos la nueva función reutilizable
+            eventClick: function(info) {
+                mostrarFichaRegistro(info.event.extendedProps.filaCompleta, info.event.title);
+            }
+        });
+        fullCalendarInstance.render();
+    } 
+    
+    // ============================================
+    // VISTA KANBAN
+    // ============================================
+    else if (vistaActual === 'kanban') {
+        var kanbanContainer = document.getElementById('vista-kanban');
+        kanbanContainer.innerHTML = ''; // Limpiamos contenedor
+
+        var board = document.createElement('div');
+        board.className = 'kanban-board';
+
+        // 1. Obtenemos las etiquetas configuradas para esta columna
+        // dictSelects viene del C# como diccionario de arrays
+        var opcionesColumna = dictSelects[columnaSeleccionada] || [];
+        
+        // 2. Preparamos los carriles (Columnas del Kanban)
+        var carriles = {};
+        
+        // Creamos un carril por defecto para los que no tienen etiqueta
+        carriles[''] = { titulo: 'Sin asignar', color: '#94a3b8', cards: [] };
+
+        // Creamos los carriles oficiales con su color
+        opcionesColumna.forEach(opc => {
+            carriles[opc.Valor] = { titulo: opc.Valor, color: opc.Color, cards: [] };
+        });
+
+        // 3. Repartimos los datos (tableDataRaw) en los carriles
+        tableDataRaw.forEach(fila => {
+            var valorEtiqueta = fila[columnaSeleccionada] || '';
+            
+            // Si el valor no existe en la config (ej. etiqueta borrada), lo mandamos al gris
+            if (!carriles[valorEtiqueta]) {
+                carriles[valorEtiqueta] = { titulo: valorEtiqueta, color: '#94a3b8', cards: [] };
+            }
+            carriles[valorEtiqueta].cards.push(fila);
+        });
+
+        // 4. Dibujamos el HTML
+        Object.keys(carriles).forEach(key => {
+            var datosCarril = carriles[key];
+            
+            // Ocultamos la columna "Sin asignar" si está vacía para que quede más limpio
+            if (key === '' && datosCarril.cards.length === 0) return; 
+
+            var colDiv = document.createElement('div');
+            colDiv.className = 'kanban-col';
+
+            // Cabecera del carril
+            var header = document.createElement('div');
+            header.className = 'kanban-header';
+            header.innerHTML = `<span class="kanban-badge" style="background-color: ${datosCarril.color}">${datosCarril.cards.length}</span> ${datosCarril.titulo}`;
+            colDiv.appendChild(header);
+
+            // Tarjetas (Cards)
+            datosCarril.cards.forEach(fila => {
+                var card = document.createElement('div');
+                card.className = 'kanban-card';
+                
+                var tituloCard = fila[colTituloPorDefecto] || ('Registro #' + fila['Id']);
+                card.innerHTML = `<div class="kanban-card-title">${tituloCard}</div>`;
+                
+                // Usamos la misma función de la ficha que en el Calendario
+                card.onclick = function() {
+                    mostrarFichaRegistro(fila, tituloCard);
+                };
+
+                colDiv.appendChild(card);
+            });
+
+            board.appendChild(colDiv);
+        });
+
+        kanbanContainer.appendChild(board);
+    }
 }

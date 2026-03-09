@@ -5,36 +5,55 @@
     var opcionesSelect = ViewData["OpcionesSelect"] as Dictionary<string, List<MetaOpcione>>;
     var opcionesRelacion = ViewData["OpcionesRelacion"] as Dictionary<string, Dictionary<string, string>>;
     var tablas = ViewData["TablasEmpresa"] as List<string>;
+    var columnasFecha = definicionColumnas?.Where(c => c.TipoDato == "Fecha").Select(c => c.Nombre).ToList() ?? new List<string>();
+    var columnasSelect = definicionColumnas?.Where(c => c.TipoDato == "Select").Select(c => c.Nombre).ToList() ?? new List<string>();
+    var colTituloBase = definicionColumnas?.FirstOrDefault(c => c.TipoDato == "Texto" && c.Nombre.ToLower() != "id")?.Nombre ?? "Id";
 }
 
+<script>
+    var colsFecha = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(columnasFecha));
+    var colsSelect = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(columnasSelect));
+    var colTituloPorDefecto = '@colTituloBase';
+
+    // Convertimos todos los registros de la tabla a JSON para que JS los pueda pintar
+    var tableDataRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model ?? new List<Dictionary<string, object>>()));
+    var dictRelaciones = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(opcionesRelacion ?? new Dictionary<string, Dictionary<string, string>>()));
+    
+    @{
+            var opcionesLimpias = opcionesSelect?.ToDictionary(
+                    k => k.Key,
+                    v => v.Value.Select(o => new { Valor = o.Valor, Color = o.Color }).ToList()
+            );
+    }
+
+    // Si opcionesLimpias es nulo, imprimimos directamente "{}" para que JS no falle
+    var dictSelects = @Html.Raw(opcionesLimpias != null ? System.Text.Json.JsonSerializer.Serialize(opcionesLimpias) : "{}");
+</script>
 <div class="table-toolbar">
-    <div class="view-tabs">
-        <div class="view-tab active">
-            <svg class="icon" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="9" y1="21" x2="9" y2="9"></line>
-            </svg>
-            Tabla
+    <div style="display: flex; align-items: center;">
+        <div class="view-tabs">
+            <div class="view-tab active" id="tab-tabla" onclick="changeView('tabla')">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                Tabla
+            </div>
+            <div class="view-tab" id="tab-calendario" onclick="changeView('calendario')">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Calendario
+            </div>
+            <div class="view-tab" id="tab-kanban" onclick="changeView('kanban')">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                Kanban
+            </div>
         </div>
-        <div class="view-tab">
-            <svg class="icon" viewBox="0 0 24 24">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            Calendario
-        </div>
-        <div class="view-tab">
-            <svg class="icon" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-                <line x1="15" y1="3" x2="15" y2="21"></line>
-            </svg>
-            Kanban
+
+        <div id="view-submenu" style="display: none; align-items: center; margin-left: 20px; gap: 8px; background: #f8fafc; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);">
+            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: var(--text-muted); stroke-width: 2; fill: none;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            <span id="view-submenu-label" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Agrupar por:</span>
+            <select id="view-submenu-select" style="background: transparent; border: none; font-size: 0.85rem; color: var(--text-main); font-weight: 600; outline: none; cursor: pointer;" onchange="renderCurrentView()">
+            </select>
         </div>
     </div>
+
 
     <div style="display: flex; gap: 10px;">
         @{
@@ -88,299 +107,243 @@
         </button>
     </div>
 </div>
-
-<div class="data-table-container">
-    @if (definicionColumnas != null && definicionColumnas.Any())
-    {
-       
-        // Función local para elegir el icono SVG según el tipo de dato C#
-        string GetIconoPorTipoDato(string tipoDato)
+<div id="vista-tabla" style="display: block;">
+    <div class="data-table-container">
+        @if (definicionColumnas != null && definicionColumnas.Any())
         {
-            if (tipoDato == "Select")
+            // Función local para elegir el icono SVG según el tipo de dato C#
+            string GetIconoPorTipoDato(string tipoDato)
             {
-                // Icono Lista/Desplegable (Select)
-                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='8' y1='6' x2='21' y2='6'></line><line x1='8' y1='12' x2='21' y2='12'></line><line x1='8' y1='18' x2='21' y2='18'></line><line x1='3' y1='6' x2='3.01' y2='6'></line><line x1='3' y1='12' x2='3.01' y2='12'></line><line x1='3' y1='18' x2='3.01' y2='18'></line></svg>";
-            }
-            if (tipoDato == "Relacion")
-            {
-                // Icono Vínculo/Enlace (Relación)
-                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'></path><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'></path></svg>";
-            }
-            if (tipoDato == "Fecha")
-            {
-                // Icono Calendario (Fecha)
-                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'></rect><line x1='16' y1='2' x2='16' y2='6'></line><line x1='8' y1='2' x2='8' y2='6'></line><line x1='3' y1='10' x2='21' y2='10'></line></svg>";
-            }
-            if (tipoDato == "Numero" || tipoDato == "Decimal")
-            {
-                // Icono Numeral (Número)
-                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='4' y1='9' x2='20' y2='9'></line><line x1='4' y1='15' x2='20' y2='15'></line><line x1='10' y1='3' x2='8' y2='21'></line><line x1='16' y1='3' x2='14' y2='21'></line></svg>";
-            }
-            if (tipoDato == "SiNo")
-            {
-                // Icono Check (Booleano)
-                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 11 12 14 22 4'></polyline><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'></path></svg>";
+                if (tipoDato == "Select") return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='8' y1='6' x2='21' y2='6'></line><line x1='8' y1='12' x2='21' y2='12'></line><line x1='8' y1='18' x2='21' y2='18'></line><line x1='3' y1='6' x2='3.01' y2='6'></line><line x1='3' y1='12' x2='3.01' y2='12'></line><line x1='3' y1='18' x2='3.01' y2='18'></line></svg>";
+                if (tipoDato == "Relacion") return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'></path><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'></path></svg>";
+                if (tipoDato == "Fecha") return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2' ry='2'></rect><line x1='16' y1='2' x2='16' y2='6'></line><line x1='8' y1='2' x2='8' y2='6'></line><line x1='3' y1='10' x2='21' y2='10'></line></svg>";
+                if (tipoDato == "Numero" || tipoDato == "Decimal") return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><line x1='4' y1='9' x2='20' y2='9'></line><line x1='4' y1='15' x2='20' y2='15'></line><line x1='10' y1='3' x2='8' y2='21'></line><line x1='16' y1='3' x2='14' y2='21'></line></svg>";
+                if (tipoDato == "SiNo") return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 11 12 14 22 4'></polyline><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'></path></svg>";
+                return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M4 7V4h16v3'></path><path d='M9 20h6'></path><line x1='12' y1='4' x2='12' y2='20'></line></svg>";
             }
 
-            // Por defecto: Icono Texto (Aa)
-            return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M4 7V4h16v3'></path><path d='M9 20h6'></path><line x1='12' y1='4' x2='12' y2='20'></line></svg>";
-        }
-        // ---------------------------------------
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="col-checkbox">
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                                <button type="button" id="btn-delete-all" class="btn-icon-danger" style="display: none;" onclick="getFilasABorrar('@ViewData["Title"]')" title="Eliminar filas seleccionadas">
+                                    <svg class="icon" viewBox="0 0 24 24">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
 
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th class="col-checkbox">
-                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                            <button type="button" id="btn-delete-all" class="btn-icon-danger" style="display: none;" onclick="getFilasABorrar('@ViewData["Title"]')" title="Eliminar filas seleccionadas">
-                                <svg class="icon" viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                                </svg>
-                            </button>
-
-                            <input id="select-all-checkbox" onchange="selectAllCheckBoxes()" type="checkbox" title="Seleccionar todo">
-                        </div>
-                    </th>
-
-                    @foreach (var colDef in definicionColumnas)
-                    {
-                        string iconoSvg = GetIconoPorTipoDato(colDef.TipoDato);
-
-                        // Recuperamos el estado de ordenación actual
-                        string currentSortCol = ViewData["SortCol"]?.ToString();
-                        string currentSortDir = ViewData["SortDir"]?.ToString();
-                        bool isSortedByMe = currentSortCol == colDef.Nombre;
-
-                        <th>
-                            <div class="th-content" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    @Html.Raw(iconoSvg)
-                                    @colDef.Nombre
-
-                                    @if (isSortedByMe)
-                                    {
-                                        <span style="color: var(--brand); font-size: 0.8rem; margin-left: 4px;">
-                                            @(currentSortDir == "ASC" ? "↑" : "↓")
-                                        </span>
-                                    }
-                                </div>
-
-                                <div class="column-menu-container">
-                                    <button type="button" class="btn-icon" style="color: var(--text-muted); padding: 4px;"
-                                            onclick="toggleColumnMenu(event, 'menu-col-@colDef.Nombre.Replace(" ", "")')" title="Opciones">
-                                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                            <circle cx="12" cy="12" r="1"></circle>
-                                            <circle cx="12" cy="5" r="1"></circle>
-                                            <circle cx="12" cy="19" r="1"></circle>
-                                        </svg>
-                                    </button>
-
-                                    <div id="menu-col-@colDef.Nombre.Replace(" ", "")" class="column-dropdown">
-                                        <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@colDef.Nombre&sortDir=ASC" class="dropdown-item" style="text-decoration: none; color: var(--text-main);">
-                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                                <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
-                                            </svg>
-                                            Ordenar A-Z / Menor a Mayor
-                                        </a>
-
-                                        <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@colDef.Nombre&sortDir=DESC" class="dropdown-item" style="text-decoration: none; color: var(--text-main);">
-                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                                <path d="M11 19h10M11 15h7M11 11h4M3 7l4-4 4 4M7 3v18"></path>
-                                            </svg>
-                                            Ordenar Z-A / Mayor a Menor
-                                        </a>
-
-                                        <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);" />
-
-                                        <button type="button" class="dropdown-item text-brand" onclick="editarColumna('@colDef.Nombre', '@colDef.TipoDato')">
-                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                                <path d="M12 20h9"></path>
-                                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                            </svg>
-                                            Editar Columna
-                                        </button>
-
-                                        <button type="button" class="dropdown-item text-danger" onclick="eliminarColumna('@ViewData["Title"]', '@colDef.Nombre')">
-                                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            </svg>
-                                            Eliminar Columna
-                                        </button>
-                                    </div>
-                                </div>
+                                <input id="select-all-checkbox" onchange="selectAllCheckBoxes()" type="checkbox" title="Seleccionar todo">
                             </div>
                         </th>
-                    }
-                </tr>
-            </thead>
-            <tbody>
-                @if(Model != null && Model.Any())
-                {                   
-                    @foreach (var fila in Model)
-                    {
-                        string idFila = fila.Values.First().ToString();;
-                        <tr>                        
-                            <td class="col-checkbox">
-                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
 
-                                    <button type="button" id="btn-delete-@idFila" class="btn-icon-danger" style="display: none;" onclick="deleteRegistro('@ViewData["Title"]','@idFila')" title="Eliminar fila">
-                                        <svg class="icon" viewBox="0 0 24 24">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                                        </svg>
-                                    </button>
+                        @foreach (var colDef in definicionColumnas)
+                        {
+                            string iconoSvg = GetIconoPorTipoDato(colDef.TipoDato);
+                            string currentSortCol = ViewData["SortCol"]?.ToString();
+                            string currentSortDir = ViewData["SortDir"]?.ToString();
+                            bool isSortedByMe = currentSortCol == colDef.Nombre;
 
-                                    <input type="checkbox" class="checkbox-fila" id="checkbox-fila-@idFila" value="@idFila" 
-                                    onchange="mostrarBotonDelete(this, '@idFila')">
+                            <th>
+                                <div class="th-content" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        @Html.Raw(iconoSvg)
+                                        @colDef.Nombre
 
+                                        @if (isSortedByMe)
+                                        {
+                                            <span style="color: var(--brand); font-size: 0.8rem; margin-left: 4px;">
+                                                @(currentSortDir == "ASC" ? "↑" : "↓")
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="column-menu-container">
+                                        <button type="button" class="btn-icon" style="color: var(--text-muted); padding: 4px; background: transparent; border: none; cursor: pointer;"
+                                                onclick="toggleColumnMenu(event, 'menu-col-@colDef.Nombre.Replace(" ", "")')" title="Opciones">
+                                            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                <circle cx="12" cy="12" r="1"></circle>
+                                                <circle cx="12" cy="5" r="1"></circle>
+                                                <circle cx="12" cy="19" r="1"></circle>
+                                            </svg>
+                                        </button>
+
+                                        <div id="menu-col-@colDef.Nombre.Replace(" ", "")" class="column-dropdown">
+                                            <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@colDef.Nombre&sortDir=ASC" class="dropdown-item" style="text-decoration: none; color: var(--text-main);">
+                                                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                    <path d="M11 5h10M11 9h7M11 13h4M3 17l4 4 4-4M7 21V3"></path>
+                                                </svg>
+                                                Ordenar A-Z / Menor a Mayor
+                                            </a>
+                                            <a href="/Dashboard/Index?tabla=@ViewData["Title"]&sortCol=@colDef.Nombre&sortDir=DESC" class="dropdown-item" style="text-decoration: none; color: var(--text-main);">
+                                                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                    <path d="M11 19h10M11 15h7M11 11h4M3 7l4-4 4 4M7 3v18"></path>
+                                                </svg>
+                                                Ordenar Z-A / Mayor a Menor
+                                            </a>
+                                            <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);" />
+                                            <button type="button" class="dropdown-item text-brand" onclick="editarColumna('@colDef.Nombre', '@colDef.TipoDato')">
+                                                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                    <path d="M12 20h9"></path>
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                                </svg>
+                                                Editar Columna
+                                            </button>
+                                            <button type="button" class="dropdown-item text-danger" onclick="eliminarColumna('@ViewData["Title"]', '@colDef.Nombre')">
+                                                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                                Eliminar Columna
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </td>
-                            @foreach (var colDef in definicionColumnas)
-                            {
-                                var nombreColumna = colDef.Nombre;
-
-                                if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        @foreach (var fila in Model)
+                        {
+                            string idFila = fila.Values.First().ToString();
+                            <tr>
+                                <td class="col-checkbox">
+                                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                                        <button type="button" id="btn-delete-@idFila" class="btn-icon-danger" style="display: none;" onclick="deleteRegistro('@ViewData["Title"]','@idFila')" title="Eliminar fila">
+                                            <svg class="icon" viewBox="0 0 24 24">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                                            </svg>
+                                        </button>
+                                        <input type="checkbox" class="checkbox-fila" id="checkbox-fila-@idFila" value="@idFila" onchange="mostrarBotonDelete(this, '@idFila')">
+                                    </div>
+                                </td>
+                                @foreach (var colDef in definicionColumnas)
                                 {
-                                
-                                    var valor = fila[nombreColumna];
+                                    var nombreColumna = colDef.Nombre;
 
-                                    // 3. LAS RELACIONES
-                                    if (colDef != null && colDef.TipoDato == "Relacion")
+                                    if (nombreColumna.ToLower() != "id" && nombreColumna.ToLower() != "fechacreacion")
                                     {
-                                        string idValor = valor != null ? valor.ToString() : "";
-                                        string textoAMostrar = idValor;
-                                        string opcionesJson = "[]";
+                                        var valor = fila[nombreColumna];
 
-                                        if (opcionesRelacion != null && opcionesRelacion.ContainsKey(nombreColumna))
+                                        if (colDef.TipoDato == "Relacion")
                                         {
-                                            if (!string.IsNullOrEmpty(idValor) && opcionesRelacion[nombreColumna].ContainsKey(idValor))
-                                            {
-                                                textoAMostrar = opcionesRelacion[nombreColumna][idValor];
-                                            }
-                                            // Empaquetamos SIEMPRE las opciones, aunque la celda esté vacía
-                                            var listaOpciones = opcionesRelacion[nombreColumna].Select(k => new { Id = k.Key, Valor = k.Value });
-                                            opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
-                                        }
+                                            string idValor = valor != null ? valor.ToString() : "";
+                                            string textoAMostrar = idValor;
+                                            string opcionesJson = "[]";
 
-                                        <td title="@textoAMostrar"
-                                            data-opciones="@opcionesJson"
-                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Relacion', '@idValor', '@ViewData["Title"]')">
-                                            <span class="cell-relation">@textoAMostrar</span>
-                                        </td>
-                                    }
-                                    // 4. LOS SELECTS
-                                    else if (colDef != null && colDef.TipoDato == "Select")
-                                    {
-                                        string textoValor = valor != null ? valor.ToString() : "";
-                                        string colorFondo = "transparent";
-                                        string opcionesJson = "[]";
-
-                                        if (opcionesSelect != null && opcionesSelect.ContainsKey(nombreColumna))
-                                        {
-                                            if (!string.IsNullOrEmpty(textoValor))
+                                            if (opcionesRelacion != null && opcionesRelacion.ContainsKey(nombreColumna))
                                             {
-                                                var opcionEncontrada = opcionesSelect[nombreColumna].FirstOrDefault(o => o.Valor == textoValor);
-                                                colorFondo = (opcionEncontrada != null && !string.IsNullOrEmpty(opcionEncontrada.Color))
-                                                ? opcionEncontrada.Color
-                                                : "#64748b";
+                                                if (!string.IsNullOrEmpty(idValor) && opcionesRelacion[nombreColumna].ContainsKey(idValor))
+                                                {
+                                                    textoAMostrar = opcionesRelacion[nombreColumna][idValor];
+                                                }
+                                                var listaOpciones = opcionesRelacion[nombreColumna].Select(k => new { Id = k.Key, Valor = k.Value });
+                                                opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
                                             }
 
-                                            // Empaquetamos SIEMPRE las opciones, aunque la celda esté vacía
-                                            var listaOpciones = opcionesSelect[nombreColumna].Select(o => new { o.Valor, o.Color });
-                                            opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
+                                            <td title="@textoAMostrar" data-opciones="@opcionesJson" onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Relacion', '@idValor', '@ViewData["Title"]')">
+                                                <span class="cell-relation">@textoAMostrar</span>
+                                            </td>
                                         }
-
-                                        <td title="@textoValor"
-                                            data-opciones="@opcionesJson"
-                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Select', '@textoValor', '@ViewData["Title"]')">
-
-                                            @if (!string.IsNullOrEmpty(textoValor))
-                                            {
-                                                <span class="chip" style="background-color: @colorFondo; color: #ffffff; border: none;">
-                                                    @textoValor
-                                                </span>
-                                            }
-                                        </td>
-                                    }
-                                    // 5. FECHAS
-                                    else if (valor is DateTime fecha)
-                                    {
-                                        string fechaFormatoInput = fecha.ToString("yyyy-MM-dd");
-
-                                        <td title="@fecha.ToLongDateString()"
-                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Fecha', '@fechaFormatoInput', '@ViewData["Title"]')">
-
-                                            @fecha.ToString("dd-MM-yyyy")
-
-                                        </td>
-                                    }
-                                    // 6. CASILLAS SÍ/NO (Booleanos)
-                                    else if (colDef != null && colDef.TipoDato == "SiNo")
-                                    {
-                                        bool isChecked = false;
-                                        if (valor != null)
+                                        else if (colDef.TipoDato == "Select")
                                         {
-                                            // Comprobamos si es true o 1
-                                            if (valor is bool bVal) isChecked = bVal;
-                                            else if (valor.ToString() == "True" || valor.ToString() == "1") isChecked = true;
+                                            string textoValor = valor != null ? valor.ToString() : "";
+                                            string colorFondo = "transparent";
+                                            string opcionesJson = "[]";
+
+                                            if (opcionesSelect != null && opcionesSelect.ContainsKey(nombreColumna))
+                                            {
+                                                if (!string.IsNullOrEmpty(textoValor))
+                                                {
+                                                    var opcionEncontrada = opcionesSelect[nombreColumna].FirstOrDefault(o => o.Valor == textoValor);
+                                                    colorFondo = (opcionEncontrada != null && !string.IsNullOrEmpty(opcionEncontrada.Color)) ? opcionEncontrada.Color : "#64748b";
+                                                }
+                                                var listaOpciones = opcionesSelect[nombreColumna].Select(o => new { o.Valor, o.Color });
+                                                opcionesJson = System.Text.Json.JsonSerializer.Serialize(listaOpciones);
+                                            }
+
+                                            <td title="@textoValor" data-opciones="@opcionesJson" onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Select', '@textoValor', '@ViewData["Title"]')">
+                                                @if (!string.IsNullOrEmpty(textoValor))
+                                                {
+                                                    <span class="chip" style="background-color: @colorFondo; color: #ffffff; border: none;">@textoValor</span>
+                                                }
+                                            </td>
                                         }
-
-                                    
-
-                                        <td>
-                                            <input type="checkbox"
-                                                   @(isChecked ? "checked" : "")
-                                                   onchange="actualizarSiNo('@ViewData["Title"]', @idFila, '@nombreColumna', this.checked)">
-                                        </td>
-                                    }
-                                    // 7. TEXTOS Y NÚMEROS NORMALES
-                                    else
-                                    {
-                                        string valorString = valor != null ? valor.ToString() : "";
-                                        <td title="@valorString"
-                                            onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', '@(colDef != null ? colDef.TipoDato : "Texto")', '@valorString', '@ViewData["Title"]')">
-                                            @valorString
-                                        </td>
+                                        else if (valor is DateTime fecha)
+                                        {
+                                            string fechaFormatoInput = fecha.ToString("yyyy-MM-dd");
+                                            <td title="@fecha.ToLongDateString()" onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', 'Fecha', '@fechaFormatoInput', '@ViewData["Title"]')">
+                                                @fecha.ToString("dd-MM-yyyy")
+                                            </td>
+                                        }
+                                        else if (colDef.TipoDato == "SiNo")
+                                        {
+                                            bool isChecked = false;
+                                            if (valor != null)
+                                            {
+                                                if (valor is bool bVal) isChecked = bVal;
+                                                else if (valor.ToString() == "True" || valor.ToString() == "1") isChecked = true;
+                                            }
+                                            <td>
+                                                <input type="checkbox" @(isChecked ? "checked" : "") onchange="actualizarSiNo('@ViewData["Title"]', @idFila, '@nombreColumna', this.checked)">
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            string valorString = valor != null ? valor.ToString() : "";
+                                            <td title="@valorString" onclick="hacerCeldaEditable(this, '@idFila', '@nombreColumna', '@(colDef != null ? colDef.TipoDato : "Texto")', '@valorString', '@ViewData["Title"]')">
+                                                @valorString
+                                            </td>
+                                        }
                                     }
                                 }
-
-                            }
-                        </tr>
+                            </tr>
+                        }
                     }
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div style="padding: 80px 20px; text-align: center; display: flex; flex-direction: column; align-items: center;">
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
-                <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--text-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round;">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="3" y1="9" x2="21" y2="9"></line>
-                    <line x1="9" y1="21" x2="9" y2="9"></line>
-                </svg>
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding: 80px 20px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+                <div style="background: #f1f5f9; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; stroke: var(--text-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 8px; color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif;">Tabla sin columnas</h3>
+                <p style="margin: 0 0 24px; color: var(--text-muted); max-width: 400px;">Esta tabla acaba de ser creada. Añade tu primera columna para empezar a guardar datos.</p>
+                <button class="btn btn-primary" onclick="openColumnModal()" type="button">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Añadir columna
+                </button>
             </div>
-
-            <h3 style="margin: 0 0 8px; color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif;">Tabla sin columnas</h3>
-            <p style="margin: 0 0 24px; color: var(--text-muted); max-width: 400px;">Esta tabla acaba de ser creada. Añade tu primera columna para empezar a guardar datos.</p>
-            <button class="btn btn-primary" onclick="openColumnModal()" type="button">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Añadir columna
-            </button>
-        </div>
-    }
+        }
+    </div>
 </div>
-    
+
+<div id="vista-calendario" style="display: none; padding: 20px; background: white; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); max-height: calc(100vh - 220px); overflow: auto;">
+    <div id="calendar-container"></div>
+</div>
+
+<div id="vista-kanban" style="display: none; overflow-x: auto; padding-top: 10px; max-height: calc(100vh - 220px);">
+    <div style="text-align: center; color: var(--text-muted); margin-top: 100px;">
+        <h3>📋 Vista Kanban</h3>
+    </div>
 </div>
 <div class="modal-overlay" id="newRecordModal">
     <div class="modal-card">
