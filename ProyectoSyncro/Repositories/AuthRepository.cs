@@ -50,7 +50,8 @@ namespace ProyectoSyncro.Repositories
                         Nombre = usuario.Nombre,
                         Admin = usuario.EsAdmin,
                         IdEmpresa = empresa.IdEmpresa,
-                        NombreEmpresa = empresa.NombreEmpresa
+                        NombreEmpresa = empresa.NombreEmpresa,
+                        IsPremium = empresa.IsPremium
                     };
                     return userSession;
                 }
@@ -91,10 +92,6 @@ namespace ProyectoSyncro.Repositories
             return (int)resultParam.Value;
         }
 
-        public async Task RegisterUserAsync()
-        {
-
-        }
 
     }
 }

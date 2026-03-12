@@ -1,10 +1,24 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ProyectoSyncro.Data;
+using ProyectoSyncro.Policies;
 using ProyectoSyncro.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme; 
+}).AddCookie(options =>
+{
+    options.LoginPath = "/Auth/Login";
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
@@ -14,6 +28,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<SettingsRepository>();
 builder.Services.AddScoped<BaseRepository>();
 builder.Services.AddScoped<AuthRepository>();
+
+builder.Services.AddTransient<IAuthorizationHandler, FreeTierTableLimitHandler>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("LimitesFreeTablas", policy =>
+        policy.Requirements.Add(new FreeTierRequirement()));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,6 +49,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

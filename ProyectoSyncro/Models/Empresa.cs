@@ -17,6 +17,8 @@ public partial class Empresa
 
     public bool Activo { get; set; }
 
+    public bool IsPremium { get; set; }
+
     public virtual ICollection<MetaTabla> MetaTablas { get; set; } = new List<MetaTabla>();
 
     public virtual ICollection<Usuario> Usuarios { get; set; } = new List<Usuario>();

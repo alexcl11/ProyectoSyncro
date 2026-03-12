@@ -1,14 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using ProyectoSyncro.Extensions;
 using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
+using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
 {
+    [Authorize]
     public class DashboardController : BaseController
     {
         private BaseRepository repo;
+
         public DashboardController(BaseRepository repo) : base(repo)
         {
             this.repo = repo;
@@ -16,39 +19,34 @@ namespace ProyectoSyncro.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Index(
-    string tabla,
-    string sortCol = "Id", string sortDir = "DESC",
-    string filterCol = null, string filterOp = null, string filterVal = null)
+            string tabla,
+            string sortCol = "Id", string sortDir = "DESC",
+            string filterCol = null, string filterOp = null, string filterVal = null)
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null) return RedirectToAction("Login", "Auth");
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            string nombreUser = HttpContext.User.Identity.Name;
 
-            int idEmpresa = user.IdEmpresa;
             List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
 
             if (tabla != null && tablas.Contains(tabla))
             {
-                // 1. Cargamos los datos pasando los parámetros de ordenación Y FILTRADO
                 List<Dictionary<string, object>> datos =
                     await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla, sortCol, sortDir, filterCol, filterOp, filterVal);
 
-                // 2. Cargamos metadatos de la tabla
                 var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
                 var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
                 var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
 
-                ViewData["NombreUser"] = user.Nombre;
+                ViewData["NombreUser"] = nombreUser;
                 ViewData["TablasEmpresa"] = tablas;
                 ViewData["Title"] = tabla;
                 ViewData["Columnas"] = columnas;
                 ViewData["OpcionesSelect"] = opciones;
                 ViewData["OpcionesRelacion"] = relaciones;
 
-                // 3. Guardamos estado de Ordenación
                 ViewData["SortCol"] = sortCol;
                 ViewData["SortDir"] = sortDir;
 
-                // 4. Guardamos estado de Filtrado
                 ViewData["FilterCol"] = filterCol;
                 ViewData["FilterOp"] = filterOp;
                 ViewData["FilterVal"] = filterVal;
@@ -60,203 +58,146 @@ namespace ProyectoSyncro.Controllers
                 return View();
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateColumn
-            (string nombreTabla, string nombreColumna, string tipoDato, string? nombreTablaRelacionada, 
+            (string nombreTabla, string nombreColumna, string tipoDato, string? nombreTablaRelacionada,
             List<string> opcionesValor, List<string> opcionesColor)
         {
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
 
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
+
+            if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
-
-                if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
+                for (int i = 0; i < opcionesValor.Count; i++)
                 {
-                    for (int i = 0; i < opcionesValor.Count; i++)
+                    string valor = opcionesValor[i];
+                    if (!string.IsNullOrWhiteSpace(valor))
                     {
-                        string valor = opcionesValor[i];
-
-                        if (!string.IsNullOrWhiteSpace(valor))
-                        {
-                            string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
-                            await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreColumna, valor, color);
-                        }
+                        string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
+                        await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreColumna, valor, color);
                     }
-                }           
+                }
+            }
 
-                return RedirectToAction("Index", new { tabla = nombreTabla });
-            }
-            else
-            {
-                return RedirectToAction("Login", "Auth");
-            }
+            return RedirectToAction("Index", new { tabla = nombreTabla });
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateRegistro(string nombreTabla, Dictionary<string, string> valoresRegistro)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
-            {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
 
-                await this.repo.InsertRegistroTablaEmpresaAsync(idEmpresa, nombreTabla, valoresRegistro);
-
-                return RedirectToAction("Index", new { tabla = nombreTabla });
-            }
-            else
-            {
-                return RedirectToAction("Login", "Auth");
-            }
+            await this.repo.InsertRegistroTablaEmpresaAsync(idEmpresa, nombreTabla, valoresRegistro);
+            return RedirectToAction("Index", new { tabla = nombreTabla });
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateCelda(string nombreTabla, int idFila, string columna, string valor)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+
+            try
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                try
-                {
-                    await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
-                    return Ok();
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ex.Message); 
-                }
+                await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
+                return Ok();
             }
-            else
+            catch (Exception ex)
             {
-                return RedirectToAction("Login", "Auth");
+                return BadRequest(ex.Message);
             }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> DeleteRegistros(string nombreTabla, List<int> idsFilas)
         {
-
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            try
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                try
+                if (idsFilas != null && idsFilas.Any())
                 {
-                    if (idsFilas != null && idsFilas.Any())
-                    {
-                        await this.repo.DeleteRegistrosAsync(idEmpresa, nombreTabla, idsFilas);
-                    }
-
-                    return Ok();
+                    await this.repo.DeleteRegistrosAsync(idEmpresa, nombreTabla, idsFilas);
                 }
-                catch (SqlException ex) when (ex.Number == 547)
-                {
-                    return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest("Ocurrió un error al intentar eliminar los datos.");
-                }
+                return Ok();
             }
-            else
+            catch (SqlException ex) when (ex.Number == 547)
             {
-                return RedirectToAction("Login", "Auth");
+                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
             }
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteRegistro(string nombreTabla, int idFila)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            try
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                try
-                {
-                    await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);
-                    return Ok();
-                }
-                catch (SqlException ex) when (ex.Number == 547)
-                {
-                    return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest("Ocurrió un error al intentar eliminar los datos.");
-                }
+                await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);
+                return Ok();
             }
-            else
+            catch (SqlException ex) when (ex.Number == 547)
             {
-                return RedirectToAction("Login", "Auth");
-
+                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteTablasEmpresa(List<string> nombresTablas)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            try
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                try
+                if (nombresTablas != null && nombresTablas.Any())
                 {
-                    if (nombresTablas != null && nombresTablas.Any())
+                    foreach (string tabla in nombresTablas)
                     {
-                        foreach (string tabla in nombresTablas)
-                        {
-                            await this.repo.DeleteTablasEmpresaAsync(idEmpresa, tabla);
-                        }
+                        await this.repo.DeleteTablasEmpresaAsync(idEmpresa, tabla);
                     }
-                    return Ok();
                 }
-                catch (SqlException ex) when (ex.Number == 547 || ex.Number == 3726)
-                {
-                    return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest("Ocurrió un error al intentar eliminar los datos.");
-                }
+                return Ok();
             }
-            else
+            catch (SqlException ex) when (ex.Number == 547 || ex.Number == 3726)
             {
-                return RedirectToAction("Login", "Auth");
-
+                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteColumna(string nombreTabla, string nombreColumna)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            try
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                try
-                {
-                    await this.repo.DeleteColumnaAsync(idEmpresa, nombreTabla, nombreColumna);
-                    return Ok();
-                }
-                catch (SqlException ex) when (ex.Number == 5074) 
-                {
-                    return BadRequest("No se puede eliminar esta columna porque está atada a una restricción o relación de la base de datos.");
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest("Ocurrió un error al intentar eliminar la columna.");
-                }
+                await this.repo.DeleteColumnaAsync(idEmpresa, nombreTabla, nombreColumna);
+                return Ok();
             }
-            else
+            catch (SqlException ex) when (ex.Number == 5074)
             {
-                return RedirectToAction("Login", "Auth");
+                return BadRequest("No se puede eliminar esta columna porque está atada a una restricción o relación de la base de datos.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Ocurrió un error al intentar eliminar la columna.");
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> RenameTabla(string nombreOld, string nombreNew)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") == null) return RedirectToAction("Login", "Auth");
-
-            int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
             try
             {
                 await this.repo.RenameTablaAsync(idEmpresa, nombreOld, nombreNew);
@@ -267,15 +208,13 @@ namespace ProyectoSyncro.Controllers
                 return BadRequest("No se pudo renombrar la tabla. Es posible que el nombre ya exista.");
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> RenameColumna(
-    string nombreTabla, string nombreOld, string nombreNew, string tipoDato,
-    string? nombreTablaRelacionada, List<string> opcionesValor, List<string> opcionesColor)
+            string nombreTabla, string nombreOld, string nombreNew, string tipoDato,
+            string? nombreTablaRelacionada, List<string> opcionesValor, List<string> opcionesColor)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") == null) return RedirectToAction("Login", "Auth"); 
-
-            int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
             try
             {
                 await this.repo.RenameColumnaAsync(idEmpresa, nombreTabla, nombreOld, nombreNew, tipoDato, nombreTablaRelacionada);
@@ -293,7 +232,6 @@ namespace ProyectoSyncro.Controllers
                     }
                 }
 
-                
                 return Ok();
             }
             catch (Exception ex)

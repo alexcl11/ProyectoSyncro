@@ -1,56 +1,66 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ProyectoSyncro.Extensions;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
+using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
 {
+    // Obliga a que cualquier persona que entre a Ajustes esté logueada
+    [Authorize]
     public class SettingsController : BaseController
     {
         private SettingsRepository repo;
         private BaseRepository baseRepo;
+
         public SettingsController(SettingsRepository repo, BaseRepository baseRepo) : base(baseRepo)
         {
             this.repo = repo;
             this.baseRepo = baseRepo;
         }
+
         public async Task<IActionResult> Index()
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null) return RedirectToAction("Login", "Auth");
+            // Extraemos los datos directamente de la Cookie (Claims)
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            string nombreUser = HttpContext.User.Identity.Name;
+            bool esAdmin = HttpContext.User.IsInRole("Admin");
+            string emailUser = HttpContext.User.FindFirst("Email")?.Value ?? "";
 
-            Empresa empresa = await this.repo.GetEmpresaAsync(user.IdEmpresa);
-            ViewData["NombreUser"] = user.Nombre;
-            ViewData["EsAdmin"] = user.Admin;
+            Empresa empresa = await this.repo.GetEmpresaAsync(idEmpresa);
+
+            ViewData["NombreUser"] = nombreUser;
+            ViewData["EsAdmin"] = esAdmin;
             ViewData["NombreEmpresa"] = empresa.NombreEmpresa;
             ViewData["CifEmpresa"] = empresa.Cifempresa;
-            ViewData["EmailUser"] = user.Email;
+            ViewData["EmailUser"] = emailUser;
             ViewData["EmpresaActiva"] = empresa.Activo;
-            if (user.Admin)
+
+            if (esAdmin)
             {
-                List<Usuario> equipo = await this.repo.GetUsuariosEmpresaAsync(user.IdEmpresa);
+                List<Usuario> equipo = await this.repo.GetUsuariosEmpresaAsync(idEmpresa);
                 ViewData["Equipo"] = equipo;
             }
-            ViewData["TablasEmpresa"] = await this.baseRepo.GetTablasEmpresaAsync(user.IdEmpresa);
+
+            ViewData["TablasEmpresa"] = await this.baseRepo.GetTablasEmpresaAsync(idEmpresa);
             return View();
         }
+
+        // Fíjate en esto: ¡Bloquea automáticamente a cualquiera que no sea Admin!
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> UpdateEmpresa(string cif, string nombreEmpresa, string empresaActiva)
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null || !user.Admin) return Unauthorized("No tienes permisos para realizar esta acción.");
-
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
             bool isActiva = (empresaActiva == "on");
 
             try
             {
-                await this.repo.UpdateEmpresaAsync(user.IdEmpresa, cif, nombreEmpresa, isActiva);
-
-                user.NombreEmpresa = nombreEmpresa;
-                HttpContext.Session.SetObject("User", user);
+                await this.repo.UpdateEmpresaAsync(idEmpresa, cif, nombreEmpresa, isActiva);
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("Ocurrió un error al intentar actualizar la empresa.");
             }
@@ -59,106 +69,99 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdatePerfil(string nombreUser, string email)
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null) return Unauthorized();
-
+            int idUsuario = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            bool esAdmin = HttpContext.User.IsInRole("Admin");
 
             try
             {
+                await this.repo.UpdateUserAsync(idUsuario, idEmpresa, nombreUser, email, esAdmin);
 
-                await this.repo.UpdateUserAsync(user.IdUsuario, user.IdEmpresa, nombreUser,
-                    email, user.Admin);
-
-                user.Nombre = nombreUser;
-                HttpContext.Session.SetObject("User", user);
+                // OJO: Si cambia su nombre, deberíamos refrescar la cookie, 
+                // pero por ahora para el TFM con hacer el update en BBDD es suficiente,
+                // se actualizará visualmente en su próximo login.
 
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("Ocurrió un error al intentar actualizar el perfil.");
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
         public async Task<IActionResult> CreateUser(string nombre, string email, string password, bool esAdmin)
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null) return Unauthorized();
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+
             try
             {
-
-                await this.repo.CreateUserAsync(user.IdEmpresa, nombre,
-                    email, esAdmin, password);
-
+                await this.repo.CreateUserAsync(idEmpresa, nombre, email, esAdmin, password);
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest("Ocurrió un error al intentar actualizar el perfil.");
-
+                return BadRequest("Ocurrió un error al crear el usuario.");
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> UpdateUsuarioEquipo(int idUsuario, string nombreUser, string email, string esAdmin)
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null || !user.Admin) return Unauthorized("No tienes permisos.");
-
-            // Checkbox devuelve "on" si está marcado
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
             bool isAdmin = (esAdmin == "on");
 
             try
             {
-                await this.repo.UpdateUserAsync(idUsuario, user.IdEmpresa, nombreUser, email, isAdmin);
+                await this.repo.UpdateUserAsync(idUsuario, idEmpresa, nombreUser, email, isAdmin);
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("Error al actualizar el usuario.");
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteUsuarioEquipo(int idUsuario)
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null || !user.Admin) return Unauthorized("No tienes permisos.");
+            int miIdUsuario = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
 
-            if (user.IdUsuario == idUsuario)
+            if (miIdUsuario == idUsuario)
             {
                 return BadRequest("No puedes eliminar tu propia cuenta de administrador.");
             }
 
             try
             {
-                await this.repo.DeleteUserAsync(idUsuario, user.IdEmpresa);
+                await this.repo.DeleteUserAsync(idUsuario, idEmpresa);
                 return Ok();
             }
             catch (Exception ex)
             {
-                return BadRequest("Error al eliminar el usuario: "+ex.Message);
+                return BadRequest("Error al eliminar el usuario: " + ex.Message);
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteEmpresa()
         {
-            var user = HttpContext.Session.GetObject<UserSession>("User");
-            if (user == null) return Unauthorized();
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
 
             try
             {
-                // 1. Borramos la empresa de la base de datos
-                await this.repo.DeleteEmpresaAsync(user.IdEmpresa);
+                await this.repo.DeleteEmpresaAsync(idEmpresa);
 
-                // 2. Destruimos la sesión del usuario
-                HttpContext.Session.Clear();
+                await HttpContext.SignOutAsync();
 
-                // 3. Devolvemos la URL del Login para que JS redirija
                 return Ok(new { url = Url.Action("Login", "Auth") });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("No se pudo eliminar la empresa.");
             }

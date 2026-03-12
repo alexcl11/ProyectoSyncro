@@ -8,5 +8,6 @@
         public bool Admin { get; set; }
         public int IdEmpresa { get; set; }
         public string NombreEmpresa { get; set; }
+        public bool IsPremium { get; set; }
     }
 }

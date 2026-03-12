@@ -418,41 +418,58 @@ function getTablasABorrar() {
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#64748b',
         confirmButtonText: 'Sí, destruir',
-        cancelButtonText: 'Cancelar',
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            // 1. Mostramos un loader manual mientras el servidor trabaja
+            Swal.fire({
+                title: 'Destruyendo...',
+                allowOutsideClick: false,
+                heightAuto: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // 2. Preparamos los datos
             var formData = new FormData();
             tablasPendientes.forEach(t => formData.append('nombresTablas', t));
 
-            return fetch('/Dashboard/DeleteTablasEmpresa', {
+            // 3. Hacemos la petición
+            fetch('/Dashboard/DeleteTablasEmpresa', {
                 method: 'POST',
                 body: formData
             })
-                .then(response => {
+                .then(async response => {
                     if (!response.ok) {
-                        return response.text().then(mensajeError => {
-                            throw new Error(mensajeError);
-                        });
+                        // Si el servidor devuelve BadRequest, leemos el mensaje
+                        let mensajeError = await response.text();
+                        throw new Error(mensajeError);
                     }
-                    return response;
+
+                    // Si todo va bien, mostramos el éxito
+                    Swal.fire({
+                        title: '¡Destruidas!',
+                        heightAuto: false,
+                        text: 'Las tablas han sido eliminadas por completo.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '/Dashboard/Index';
+                    });
                 })
                 .catch(error => {
-                    Swal.showValidationMessage(`${error.message}`);
+                    // 4. Si hay error (SQL o Permisos), mostramos el SweetAlert ROJO
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo eliminar',
+                        text: error.message,
+                        heightAuto: false,
+                        confirmButtonColor: '#64748b'
+                    });
                 });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: '¡Destruidas!',
-                heightAuto: false,
-                text: 'Las tablas han sido eliminadas por completo.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = '/Dashboard/Index';
-            });
         }
     });
 }
@@ -1016,3 +1033,31 @@ function renderCurrentView() {
         kanbanContainer.appendChild(board);
     }
 }
+
+// ==========================================
+// CONTROL DE LÍMITES (PLAN FREE)
+// ==========================================
+document.addEventListener("DOMContentLoaded", function () {
+    // Buscamos la "miga de pan" que dejó el servidor
+    var flagLimite = document.getElementById('flag-limite-free');
+
+    // Si existe, lanzamos el SweetAlert
+    if (flagLimite) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Límite del Plan Free',
+            heightAuto: false,
+            html: 'Has alcanzado el límite de <b>3 tablas</b> de tu plan actual.<br><br>Para crear tablas ilimitadas y gestionar tu negocio sin frenos, mejora tu cuenta a Premium.',
+            confirmButtonText: 'Ver planes Premium',
+            confirmButtonColor: '#3b82f6',
+            showCancelButton: true,
+            cancelButtonText: 'Ahora no',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Aquí en el futuro puedes redirigir a la vista de Stripe/Precios
+                alert("¡Módulo de pagos en construcción! 🚀");
+            }
+        });
+    }
+});

@@ -8,3 +8,5 @@
 	crear/modificar/eliminar y ascender a admins para poder hacer cosas)✅
 8.- Implementar Chat entre usuarios
 9.- Implementar IA para crear tablas
+10.- añadir stripe
+11.- mirar como hacer que una empresa se pueda volver premium

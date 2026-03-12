@@ -1,16 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using ProyectoSyncro.Extensions;
-using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
 {
+    // Etiqueta global: Todos los controladores que hereden de BaseController requerirán Login
+    [Authorize]
     public class BaseController : Controller
     {
-        private readonly BaseRepository repo; 
+        private readonly BaseRepository repo;
 
         public BaseController(BaseRepository repo)
         {
@@ -20,29 +22,48 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(string nombreTabla)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            var authService = HttpContext.RequestServices.GetService<IAuthorizationService>();
+
+            var authResult = await authService.AuthorizeAsync(User, "LimitesFreeTablas");
+
+            if (!authResult.Succeeded)
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
-                await this.repo.CreateTablaEmpresaAsync(idEmpresa, nombreTabla);
-                return RedirectToAction("Index", "Dashboard", new { tabla = nombreTabla });
+                TempData["ErrorLimites"] = "true";
+                string tablaActual = Request.Headers["Referer"].ToString().Split("tabla=").LastOrDefault() ?? "";
+                return RedirectToAction("Index", "Dashboard", new { tabla = tablaActual });
             }
-            return RedirectToAction("Index", "Dashboard");
+
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            await this.repo.CreateTablaEmpresaAsync(idEmpresa, nombreTabla);
+
+            return RedirectToAction("Index", "Dashboard", new { tabla = nombreTabla });
         }
 
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            if (HttpContext.Session.GetObject<UserSession>("User") != null)
+            // 2. En lugar de Session, comprobamos si la Identidad (Cookie) es válida
+            if (context.HttpContext.User.Identity.IsAuthenticated)
             {
-                int idEmpresa = HttpContext.Session.GetObject<UserSession>("User").IdEmpresa;
+                int idEmpresa = int.Parse(context.HttpContext.User.FindFirst("IdEmpresa").Value);
                 List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
 
-                ViewData["TablasEmpresa"] = tablas;
-                ViewData["NombreUser"] = HttpContext.Session.GetObject<UserSession>("User").Nombre;
-                ViewData["NombreEmpresa"] = HttpContext.Session.GetObject<UserSession>("User").NombreEmpresa;
+                // Como BaseController hereda de Controller, usamos this.ViewData directamente
+                this.ViewData["TablasEmpresa"] = tablas;
+                this.ViewData["NombreUser"] = context.HttpContext.User.Identity.Name;
+
+                // Extraemos el nombre de la empresa del pasaporte
+                var claimNombreEmpresa = context.HttpContext.User.FindFirst("NombreEmpresa");
+                if (claimNombreEmpresa != null)
+                {
+                    this.ViewData["NombreEmpresa"] = claimNombreEmpresa.Value;
+                }
+
+                // Dejamos que la petición continúe su camino hacia el Dashboard o Settings
                 await next();
             }
             else
             {
+                // Si alguien llega hasta aquí sin estar logueado, lo expulsamos al Login
                 context.Result = new RedirectToActionResult("Login", "Auth", null);
             }
         }
