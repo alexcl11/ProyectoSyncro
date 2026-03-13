@@ -351,3 +351,108 @@ div.swal2-popup {
     .swal2-cancel:hover {
         background-color: #f8fafc !important;
     }
+
+
+/* Cabecera de la sección de Equipo */
+.team-header-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+/* Contenedor para que las tablas tengan scroll en móvil sin romper la tarjeta */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Deslizamiento suave en iPhone */
+    margin-top: 10px; /* Separación del título */
+}
+
+/* ==========================================
+   8. RESPONSIVE: VISTA MÓVIL (AJUSTES)
+   ========================================== */
+@media (max-width: 768px) {
+    .settings-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 15px; /* Devolvemos un poco de margen para que no se pegue al borde del móvil */
+    }
+
+    /* 🔥 LA CURA DEFINITIVA: Obligamos al Grid a respetar el ancho de la pantalla */
+    .settings-content {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .settings-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        min-width: 0;
+    }
+
+        .settings-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+    .settings-nav-item {
+        white-space: nowrap;
+        flex: 0 0 auto;
+        padding: 10px 16px;
+    }
+
+    .settings-card {
+        padding: 16px;
+        border-radius: 12px;
+        width: 100%; /* Forzamos a que no crezca más allá de su padre */
+    }
+
+    .settings-form-row {
+        max-width: 100%;
+    }
+
+    .form-control {
+        font-size: 1rem;
+    }
+
+    .team-header-action {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        width: 100%;
+    }
+
+        .team-header-action .btn-primary {
+            margin-top: 0;
+            width: 100%;
+        }
+
+    .data-table {
+        min-width: 500px;
+    }
+
+    .settings-card .btn-primary {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .switch-container {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+/* Ajustes súper pequeños para pantallas de menos de 400px (móviles antiguos) */
+@media (max-width: 480px) {
+    .settings-section-title {
+        font-size: 1.25rem;
+    }
+
+    .settings-section-desc {
+        font-size: 0.85rem;
+    }
+}

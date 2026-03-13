@@ -156,12 +156,15 @@ p {
     display: none;
     width: 38px;
     height: 38px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border); /* O 'border: none;' si lo prefieres limpio */
     border-radius: 10px;
     background: #fff;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    flex-direction: column; /* Añade esto para que las líneas se apilen */
+    gap: 5px; /* Separación entre líneas */
+    cursor: pointer;
+    z-index: 51; /* Para que quede por encima del menú desplegable */
 }
 
     .nav-toggle span {
@@ -169,13 +172,23 @@ p {
         width: 18px;
         height: 2px;
         background: var(--ink);
+        transition: all 0.3s ease; /* Transición suave */
     }
 
 .nav-mobile {
     display: none;
-    background: #fff;
-    border-top: 1px solid var(--border);
+    position: absolute;
+    top: 100%; /* Se coloca justo debajo de la barra de navegación */
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
     padding: 20px 0 24px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+    /* Permitimos scroll si la pantalla es muy pequeña */
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
 }
 
     .nav-mobile.open {

@@ -1061,3 +1061,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+// ==========================================
+// MENÚ MÓVIL
+// ==========================================
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('mobileOverlay').classList.toggle('active');
+}

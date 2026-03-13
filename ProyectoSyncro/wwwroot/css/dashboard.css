@@ -770,3 +770,169 @@ body.swal2 - shown {
     font-size: 0.85rem;
     color: var(--text-main);
 }
+
+/* ==========================================
+   ESTILOS DEL SELECT "AGRUPAR POR"
+   ========================================== */
+
+/* 1. Ocultamos el estilo feo del navegador */
+#view-submenu-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    /* 2. Tipografía limpia */
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    cursor: pointer;
+    /* 3. Espacio para la nueva flecha */
+    padding: 2px 20px 2px 4px;
+    /* 4. Flecha SVG personalizada (negra) dibujada directamente en el CSS */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 14px;
+    transition: all 0.2s ease;
+}
+
+    /* Efecto al hacer clic/foco (se pone azul) */
+    #view-submenu-select:focus,
+    #view-submenu-select:hover {
+        color: var(--brand);
+        /* Flecha en color azul marca */
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23245493' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    }
+
+    /* 5. Forzamos a que las opciones desplegadas sean blancas y legibles */
+    #view-submenu-select option {
+        background-color: #ffffff;
+        color: var(--text-main);
+        font-weight: 600;
+        font-family: 'Manrope', sans-serif;
+        padding: 10px;
+    }
+
+/* ==========================================
+   RESPONSIVE: MENÚ MÓVIL (HAMBURGUESA)
+   ========================================== */
+
+/* Capa oscura oculta por defecto */
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 998;
+}
+
+/* ==========================================
+   ¡¡TODO LO DE ABAJO ESTÁ DENTRO DE UNA ÚNICA REGLA PARA MÓVIL!!
+   ========================================== */
+@media (max-width: 768px) {
+
+    /* --- 1. MENÚ HAMBURGUESA --- */
+    .hamburger-btn {
+        display: block !important;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 999;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+    }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+    .mobile-overlay.active {
+        display: block;
+    }
+
+    /* --- 2. VISTAS (TABLA, KANBAN, CALENDARIO) --- */
+    /* --- 2. VISTAS (TABLA, KANBAN, CALENDARIO) --- */
+    .table-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+        /* 🔥 EL TRUCO: Forzamos a los 'divs' invisibles que agrupan botones a que salten de línea */
+        .table-toolbar > div {
+            flex-wrap: wrap !important;
+            width: 100%;
+            gap: 10px;
+        }
+
+    /* Hacemos que las pestañas sean un bloque duro del 100% para expulsar al resto abajo */
+    .view-tabs {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        overflow-x: auto;
+        flex-wrap: nowrap !important; /* Los botones de dentro no saltan */
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding-bottom: 4px; /* Un respirito por abajo */
+    }
+
+        .view-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+    /* El menú de agrupar se colocará debajo y alineado a la izquierda */
+    #view-submenu {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        margin-top: 0;
+        margin-left: 0 !important;
+    }
+
+    .content-area {
+        padding: 16px 12px;
+        overflow-x: hidden;
+    }
+
+    .fc .fc-toolbar.fc-header-toolbar {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .fc-toolbar-chunk {
+        text-align: center;
+    }
+    /* --- 3. LIMPIEZA DE CABECERA (TOPBAR) --- */
+
+    /* Ocultamos el texto de los botones */
+    .hide-mobile {
+        display: none;
+    }
+
+    /* Convertimos los botones en iconos cuadrados quitando el hueco (gap) */
+    .topbar-actions .btn {
+        padding: 10px;
+        gap: 0 !important;
+    }
+
+    /* Reducimos un pelín el título para que respire más */
+    .topbar-title {
+        font-size: 1.1rem;
+    }
+
+    /* Quitamos el padding lateral enorme de la cabecera en móvil */
+    .topbar {
+        padding: 0 16px;
+    }
+}

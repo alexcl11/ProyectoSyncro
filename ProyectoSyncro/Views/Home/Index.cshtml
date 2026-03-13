@@ -46,8 +46,8 @@
                         <a href="#use-cases">Casos de uso</a>
                         <a href="#pricing">Precios</a>
                         <div class="nav-mobile-actions">
-                            <button class="btn btn-ghost">Iniciar sesion</button>
-                            <button class="btn btn-primary">Empezar gratis</button>
+                            <a href="/Auth/Login" class="btn btn-ghost">Iniciar sesion</a>
+                            <a href="/Auth/Register" class="btn btn-primary">Empezar gratis</a>
                         </div>
                     </div>
                 </div>
@@ -713,30 +713,43 @@
     </div>
 
     <script>
-        const toggle = document.querySelector('[data-menu-toggle]');
-        const mobileMenu = document.querySelector('[data-mobile-menu]');
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. LÓGICA DEL MENÚ MÓVIL (HAMBURGUESA)
+            const toggleBtn = document.querySelector('.nav-toggle');
+            const mobileMenu = document.querySelector('.nav-mobile');
 
-        if (toggle && mobileMenu) {
-          toggle.addEventListener('click', () => {
-            const isOpen = mobileMenu.classList.toggle('open');
-            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-          });
-        }
+            if (toggleBtn && mobileMenu) {
+                toggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault(); // Evitamos comportamientos raros
 
-        const tabButtons = document.querySelectorAll('[data-tab-button]');
-        const tabPanels = document.querySelectorAll('[data-tab-panel]');
+                    // Alternamos la clase "open"
+                    const isOpen = mobileMenu.classList.toggle('open');
 
-        tabButtons.forEach((button) => {
-          button.addEventListener('click', () => {
-            const target = button.getAttribute('data-tab-button');
-            tabButtons.forEach((btn) => btn.classList.remove('active'));
-            tabPanels.forEach((panel) => panel.classList.remove('active'));
-            button.classList.add('active');
-            const activePanel = document.querySelector(`[data-tab-panel="${target}"]`);
-            if (activePanel) {
-              activePanel.classList.add('active');
+                    // Actualizamos el atributo para accesibilidad
+                    toggleBtn.setAttribute('aria-expanded', isOpen);
+                });
             }
-          });
+
+            // 2. LÓGICA DE LAS PESTAÑAS (CASOS DE USO)
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = button.getAttribute('data-tab-button');
+
+                    // Quitamos la clase activa de todos los botones y paneles
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanels.forEach(panel => panel.classList.remove('active'));
+
+                    // Añadimos la clase activa al botón pulsado y a su panel correspondiente
+                    button.classList.add('active');
+                    const activePanel = document.querySelector(`.tab-panel[data-tab-panel="${target}"]`);
+                    if (activePanel) {
+                        activePanel.classList.add('active');
+                    }
+                });
+            });
         });
     </script>
 </body>
