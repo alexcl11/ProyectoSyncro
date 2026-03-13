@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProyectoSyncro.Data;
 using ProyectoSyncro.Policies;
 using ProyectoSyncro.Repositories;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +36,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("LimitesFreeTablas", policy =>
         policy.Requirements.Add(new FreeTierRequirement()));
 });
-
+builder.Services.AddHttpContextAccessor();
+// Configuración de la clave de Stripe (Pega aquí tu clave secreta)
+StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe")["SecretKey"]; 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

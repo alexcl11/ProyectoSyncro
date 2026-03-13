@@ -36,6 +36,7 @@ namespace ProyectoSyncro.Controllers
             ViewData["CifEmpresa"] = empresa.Cifempresa;
             ViewData["EmailUser"] = emailUser;
             ViewData["EmpresaActiva"] = empresa.Activo;
+            ViewData["EsPremium"] = empresa.IsPremium;
 
             if (esAdmin)
             {
@@ -94,7 +95,17 @@ namespace ProyectoSyncro.Controllers
         public async Task<IActionResult> CreateUser(string nombre, string email, string password, bool esAdmin)
         {
             int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            bool esPremium = User.HasClaim("Plan", "Premium");
 
+            // Validamos en el servidor por seguridad
+            if (!esPremium)
+    {
+                var equipoActual = await this.repo.GetUsuariosEmpresaAsync(idEmpresa); // Ajusta a tu método
+                if (equipoActual.Count >= 3)
+                {
+                    return BadRequest("Límite de 3 usuarios alcanzado en el plan gratuito.");
+                }
+            }
             try
             {
                 await this.repo.CreateUserAsync(idEmpresa, nombre, email, esAdmin, password);

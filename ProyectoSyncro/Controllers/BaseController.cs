@@ -50,8 +50,7 @@ namespace ProyectoSyncro.Controllers
                 // Como BaseController hereda de Controller, usamos this.ViewData directamente
                 this.ViewData["TablasEmpresa"] = tablas;
                 this.ViewData["NombreUser"] = context.HttpContext.User.Identity.Name;
-
-                // Extraemos el nombre de la empresa del pasaporte
+                this.ViewData["EsPremium"] = context.HttpContext.User.HasClaim("Plan", "Premium");                // Extraemos el nombre de la empresa del pasaporte
                 var claimNombreEmpresa = context.HttpContext.User.FindFirst("NombreEmpresa");
                 if (claimNombreEmpresa != null)
                 {

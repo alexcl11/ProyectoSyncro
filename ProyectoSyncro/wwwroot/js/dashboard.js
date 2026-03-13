@@ -1069,3 +1069,31 @@ function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
     document.getElementById('mobileOverlay').classList.toggle('active');
 }
+
+// ABRIR MODAL DE NUEVA TABLA (CON LÍMITE DE 3 EN PLAN FREE)
+function intentarCrearTabla(cantidadTablas, esPremium) {
+
+    // Si NO es premium y ya tiene 3 o más tablas, ¡Paywall!
+    if (!esPremium && cantidadTablas >= 3) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Límite del Plan Free',
+            heightAuto: false,
+            html: 'Has alcanzado el límite de <b>3 tablas</b> de tu plan actual.<br><br>Para seguir creciendo y gestionar tu negocio sin frenos, mejora tu cuenta a Premium.',
+            confirmButtonText: 'Desbloquear Premium',
+            confirmButtonColor: '#3b82f6',
+            showCancelButton: true,
+            cancelButtonText: 'Ahora no',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirigimos a la pasarela de pago de Stripe
+                window.location.href = '/Payment/Checkout';
+            }
+        });
+    }
+    else {
+        // Si tiene menos de 3 tablas (ej: 0, 1, 2) O es Premium, abre el modal sin problema
+        document.getElementById('newTableModal').classList.add('active');
+    }
+}

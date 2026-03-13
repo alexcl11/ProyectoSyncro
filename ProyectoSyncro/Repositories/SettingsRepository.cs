@@ -147,5 +147,17 @@ namespace ProyectoSyncro.Repositories
                 await com.Connection.CloseAsync();
             }
         }
+
+        public async Task UpdateEmpresaPremiumAsync(int idEmpresa)
+        {
+            var empresa = await this.context.Empresas.FindAsync(idEmpresa);
+
+            if (empresa != null)
+            {
+                empresa.IsPremium = true;
+
+                await this.context.SaveChangesAsync();
+            }
+        }
     }
 }

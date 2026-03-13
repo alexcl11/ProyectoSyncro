@@ -297,3 +297,33 @@ function confirmarEliminarEmpresa() {
         }
     });
 }
+
+// ==========================================
+// CONTROL DE LÍMITES: CREAR USUARIO
+// ==========================================
+function intentarCrearUsuario(cantidadUsuarios, esPremium) {
+
+    // Si NO es premium y ya hay 3 o más usuarios en el equipo, ¡Bloqueo!
+    if (!esPremium && cantidadUsuarios >= 3) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Límite de Equipo Alcanzado',
+            heightAuto: false,
+            html: 'Tu plan Free solo permite un máximo de <b>3 usuarios</b>.<br><br>Mejora tu cuenta a Premium para invitar a todos tus empleados sin restricciones.',
+            confirmButtonText: 'Desbloquear Premium',
+            confirmButtonColor: '#3b82f6',
+            showCancelButton: true,
+            cancelButtonText: 'Ahora no',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Le mandamos a la pasarela de pago de Stripe
+                window.location.href = '/Payment/Checkout';
+            }
+        });
+    }
+    else {
+        // Si tiene menos de 3 usuarios O ya ha pagado, abrimos el modal normal
+        openAddUserModal();
+    }
+}
