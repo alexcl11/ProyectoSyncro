@@ -1,0 +1,50 @@
+﻿@{
+    ViewData["Title"] = "Mejorar a Premium";
+    Layout = "_Layout"; // Usa tu layout para que se vea el menú lateral
+}
+
+<style>
+    .checkout-wrapper {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(36, 84, 147, 0.05);
+        border: 1px solid var(--border);
+    }
+</style>
+
+<div class="checkout-wrapper">
+    <h2 class="settings-section-title" style="text-align: center; margin-bottom: 20px;">Desbloquea el Plan Premium</h2>
+    <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">Estás a un paso de conseguir acceso total a Syncro.</p>
+
+    <div id="checkout"></div>
+</div>
+
+@section Scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <script>
+        // 2. Inicializamos Stripe con la clave pública que nos mandó el Controlador
+        const stripe = Stripe('@ViewBag.PublicKey');
+
+        // 3. Montamos el formulario de pago
+        initialize();
+
+        async function initialize() {
+            // Obtenemos el secreto de la sesión del controlador
+            const fetchClientSecret = async () => {
+                return '@ViewBag.ClientSecret';
+            };
+
+            // Creamos el componente embedded
+            const checkout = await stripe.initEmbeddedCheckout({
+                fetchClientSecret,
+            });
+
+            // Lo metemos dentro de nuestro div con id="checkout"
+            checkout.mount('#checkout');
+        }
+    </script>
+}

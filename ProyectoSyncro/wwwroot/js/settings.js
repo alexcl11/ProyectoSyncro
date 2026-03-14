@@ -106,17 +106,6 @@ function closeAddUserModal() {
     document.getElementById('newUserModal').classList.remove('active');
 }
 
-function actualizarTextoAdmin(checkbox) {
-    const labelTexto = document.getElementById('esadmin-text');
-    if (checkbox.checked) {
-        labelTexto.textContent = 'Activa';
-        labelTexto.style.color = '#10b981';
-    } else {
-        labelTexto.textContent = 'Inactiva';
-        labelTexto.style.color = '#64748b';
-    }
-}
-
 function guardarNuevoUsuario(event) {
     event.preventDefault();
     var formData = new FormData(document.getElementById('formNewUser'));
