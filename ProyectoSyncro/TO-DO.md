@@ -10,4 +10,4 @@
 9.- Implementar IA para crear tablas
 10.- añadir stripe✅
 11.- mirar como hacer que una empresa se pueda volver premium✅
-12. hacer que pueda volver a plan free
+12. hacer que pueda volver a plan free✅

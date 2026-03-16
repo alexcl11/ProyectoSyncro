@@ -17,13 +17,14 @@ namespace ProyectoSyncro.Controllers
                 this.repo = repo;
             }
 
-            public IActionResult Register()
+            public IActionResult Register(string plan = "free")
             {
+                ViewData["PLANSELECCIONADO"] = plan;
                 return View();
             }
 
             [HttpPost]
-            public async Task<IActionResult> Register(string nombreEmpresa, string cif, string nombreAdmin, string email, string password)
+            public async Task<IActionResult> Register(string plan, string nombreEmpresa, string cif, string nombreAdmin, string email, string password)
             {
 
                 await this.repo.RegisterEmpresaUserAsync(cif, nombreEmpresa, nombreAdmin, email, password);
@@ -63,8 +64,17 @@ namespace ProyectoSyncro.Controllers
                             ExpiresUtc = DateTime.UtcNow.AddHours(8)
                         });
 
-                    return RedirectToAction("Index", "Dashboard");
-                }
+                    if (plan == "premium")
+                    {
+                        // Le mandamos a pagar
+                        return RedirectToAction("Checkout", "Payment");
+                    }
+                    else
+                    {
+                        // Le mandamos al panel normal
+                        return RedirectToAction("Index", "Dashboard");
+                    }
+            }
                 else
                 {
                     ViewData["MENSAJE"] = "Hubo un error al registrar la empresa.";
@@ -72,8 +82,9 @@ namespace ProyectoSyncro.Controllers
                 }
             }
 
-            public IActionResult Login()
+            public IActionResult Login(string? mensaje)
             {
+            ViewData["MENSAJE"] = mensaje;
                 return View();
             }
 
@@ -131,4 +142,4 @@ namespace ProyectoSyncro.Controllers
             return RedirectToAction("Login", "Auth");
         }
     } 
-    }
+}

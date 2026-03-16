@@ -32,6 +32,14 @@
         </div>
 
         <form method="post">
+            <input type="hidden" name="plan" value="@ViewData["PlanSeleccionado"]" />
+
+            @if (ViewData["PLANSELECCIONADO"].ToString() == "premium")
+            {
+                <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; color: #1e3a8a; font-size: 0.9rem;">
+                    ✨ Estás registrándote para el <b>Plan Premium</b>. <br>El pago se realizará en el siguiente paso.
+                </div>
+            }
             <div class="form-group">
                 <label>Nombre de la Empresa</label>
                 <input type="text" class="form-control" name="nombreEmpresa" placeholder="Ej. JL Marlo Renovation" required />

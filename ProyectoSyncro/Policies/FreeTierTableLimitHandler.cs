@@ -14,7 +14,7 @@ namespace ProyectoSyncro.Policies
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        // 1. Inyectamos el IHttpContextAccessor en el constructor
+        
         public FreeTierTableLimitHandler(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -32,12 +32,11 @@ namespace ProyectoSyncro.Policies
                 return;
             }
 
-            // 2. MAGIA AQUÍ: Obtenemos el HttpContext a través del Accessor de forma 100% segura
+           
             var httpContext = _httpContextAccessor.HttpContext;
 
             if (httpContext != null)
             {
-                // Obtenemos el repositorio desde los servicios de la petición
                 var repo = httpContext.RequestServices.GetService<BaseRepository>();
                 var claimIdEmpresa = context.User.FindFirst("IdEmpresa");
 
@@ -45,7 +44,6 @@ namespace ProyectoSyncro.Policies
                 {
                     int idEmpresa = int.Parse(claimIdEmpresa.Value);
 
-                    // Contamos cuántas tablas tiene
                     var tablas = await repo.GetTablasEmpresaAsync(idEmpresa);
 
                     // Si es plan Free y tiene 0, 1, o 2 tablas, lo dejamos pasar

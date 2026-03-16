@@ -1097,3 +1097,90 @@ function intentarCrearTabla(cantidadTablas, esPremium) {
         document.getElementById('newTableModal').classList.add('active');
     }
 }
+// ==========================================
+// EXPORTAR TABLA A PDF (VERSIÓN LIMPIA)
+// ==========================================
+function exportarTablaAPDF(idTabla, nombreTabla) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'pt', 'a4'); // 'l' = landscape (horizontal)
+
+    // 1. Título y cabecera del documento
+    doc.setFontSize(18);
+    doc.setTextColor(30, 41, 59);
+    doc.text(nombreTabla+' - Syncro', 40, 40);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    const fecha = new Date().toLocaleDateString('es-ES');
+    doc.text(`Generado el: ${fecha}`, 40, 60);
+
+    // =======================================================
+    // 2. EXTRAER DATOS LIMPIOS DE LA TABLA HTML
+    // =======================================================
+    const table = document.getElementById(idTabla);
+    const headers = [];
+    const body = [];
+
+    // A) Extraer Cabeceras (Empezamos en i=1 para saltar la columna del checkbox de borrar)
+    const ths = table.querySelectorAll('thead th');
+    for (let i = 1; i < ths.length; i++) {
+        // Clonamos la cabecera para poder borrarle el menú sin afectar a la web real
+        let thClone = ths[i].cloneNode(true);
+
+        let menu = thClone.querySelector('.column-menu-container');
+        if (menu) menu.remove(); // Quitamos el texto de Editar/Borrar
+
+        // Quitamos las flechitas de ordenación (↑ ↓) si las hay
+        let textoLimpio = thClone.innerText.replace(/↑|↓/g, '').trim();
+        headers.push(textoLimpio);
+    }
+
+    // B) Extraer Filas (Empezamos en i=1 para saltar la primera columna vacía)
+    const trs = table.querySelectorAll('tbody tr');
+    trs.forEach(tr => {
+        const rowData = [];
+        const tds = tr.querySelectorAll('td');
+
+        for (let i = 1; i < tds.length; i++) {
+            let td = tds[i];
+            let text = td.innerText.trim();
+
+            // 🔥 ¡LA MAGIA DE LOS CHECKBOX!
+            // Buscamos si dentro de esta celda hay un checkbox
+            const checkbox = td.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                // Si lo hay, miramos si está marcado y escribimos Sí o No
+                text = checkbox.checked ? 'Sí' : 'No';
+            }
+
+            rowData.push(text);
+        }
+        body.push(rowData);
+    });
+
+    // =======================================================
+    // 3. GENERAR EL PDF
+    // =======================================================
+    doc.autoTable({
+        head: [headers], // Le pasamos nuestro array limpio
+        body: body,      // Le pasamos nuestras filas limpias
+        startY: 80,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [36, 84, 147], // Azul Syncro
+            textColor: 255,
+            fontSize: 10,
+            halign: 'center'
+        },
+        bodyStyles: {
+            fontSize: 9,
+            textColor: 50
+        },
+        alternateRowStyles: {
+            fillColor: [248, 250, 252] // Gris muy clarito
+        }
+    });
+
+    // 4. Descargar
+    doc.save(`${nombreTabla}_Syncro_${fecha.replace(/\//g, '-')}.pdf`);
+}

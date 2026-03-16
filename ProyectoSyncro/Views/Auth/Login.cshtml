@@ -1,5 +1,6 @@
 ﻿@{
     Layout = null; // Apagamos el layout principal
+    string mensaje = (string)ViewData["MENSAJE"];
 }
 
 <!DOCTYPE html>
@@ -24,8 +25,17 @@
         <a href="/" class="back-link">← Volver a la web</a>
         <div class="auth-header">
             <img src="~/img/logo.png" alt="Syncro Logo" />
-            <h2>Bienvenido de nuevo</h2>
-            <p>Ingresa a tu espacio de trabajo.</p>
+            @if (mensaje != null)
+            {
+                <h2>Bienvenido de nuevo</h2>
+                <p class="text-success">@mensaje</p>
+            }
+            else
+            {
+                <h2>Bienvenido de nuevo</h2>
+                <p>Ingresa a tu espacio de trabajo.</p>
+            }
+            
         </div>
 
         <form method="post">

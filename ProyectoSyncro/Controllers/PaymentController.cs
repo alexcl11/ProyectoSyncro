@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Stripe.Checkout;
+using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
-using Microsoft.AspNetCore.Authentication;
+using Stripe.Checkout;
 using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
@@ -10,26 +11,31 @@ namespace ProyectoSyncro.Controllers
     [Authorize]
     public class PaymentController : Controller
     {
-        private readonly SettingsRepository repo;
-
-        public PaymentController(SettingsRepository repo)
+        private SettingsRepository repo;
+        private BaseRepository baseRepo;
+        public PaymentController(SettingsRepository repo, BaseRepository baseRepo)
         {
             this.repo = repo;
+            this.baseRepo = baseRepo;
         }
 
         [HttpGet]
-        public IActionResult Checkout()
+        public async  Task<IActionResult> Checkout()
         {
             var domain = "https://localhost:7100"; 
 
             string idEmpresa = HttpContext.User.FindFirst("IdEmpresa").Value;
             string emailUsuario = HttpContext.User.FindFirst("Email")?.Value;
 
+            Empresa empresa = await this.repo.GetEmpresaAsync(int.Parse(idEmpresa));
+
+            ViewData["TablasEmpresa"] = await this.baseRepo.GetTablasEmpresaAsync(int.Parse(idEmpresa));
+            ViewData["NombreUser"] = HttpContext.User.Identity.Name;
+            ViewData["NombreEmpresa"] = empresa.NombreEmpresa;
+
             var options = new SessionCreateOptions
             {
-                // 🔥 1. Le decimos a Stripe que esto irá incrustado en nuestra web
                 UiMode = "embedded",
-
                 PaymentMethodTypes = new List<string> { "card" },
                 CustomerEmail = emailUsuario,
                 LineItems = new List<SessionLineItemOptions>
@@ -38,32 +44,35 @@ namespace ProyectoSyncro.Controllers
                     {
                         PriceData = new SessionLineItemPriceDataOptions
                         {
-                            UnitAmount = 2900,
+                            UnitAmount = 999, // 9.99€
                             Currency = "eur",
+                
+                            // Le decimos que es recurrente cada mes
+                            Recurring = new SessionLineItemPriceDataRecurringOptions
+                            {
+                                Interval = "month",
+                            },
+
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = "Plan Premium - Syncro",
-                                Description = "Tablas infinitas. Registros ilimitados."
+                                Name = "Plan Premium Mensual - Syncro",
+                                Description = "Suscripción mensual: Tablas infinitas y registros ilimitados."
                             },
                         },
                         Quantity = 1,
                     },
                 },
-                Mode = "payment",
+                // Cambiamos a modo suscripción
+                Mode = "subscription",
                 ClientReferenceId = idEmpresa,
-
-                // 🔥 2. En modo embedded, SuccessUrl se cambia por ReturnUrl
                 ReturnUrl = domain + "/Payment/Success?session_id={CHECKOUT_SESSION_ID}",
             };
-
             var service = new SessionService();
             Session session = service.Create(options);
 
-            // 🔥 3. Pasamos a la vista la "llave" de esta sesión y tu clave pública
             ViewBag.ClientSecret = session.ClientSecret;
             ViewBag.PublicKey = "pk_test_51TASDdKG8fHbwgC1LrWG6Il8hlGN60tw80CxrmU2959IqvYlBTwiTLMfiyvWdFTuMLxcQvnBeezT4481wBkMtKSv00HzfYHEhB";
 
-            // 🔥 4. Devolvemos una Vista nuestra en vez de redirigir
             return View();
         }
 

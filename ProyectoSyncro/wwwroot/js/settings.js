@@ -316,3 +316,43 @@ function intentarCrearUsuario(cantidadUsuarios, esPremium) {
         openAddUserModal();
     }
 }
+
+// ==========================================
+// CANCELAR SUSCRIPCIÓN PREMIUM (STRIPE + LOCAL)
+// ==========================================
+function cancelarPremium() {
+    Swal.fire({
+        title: '¿Cancelar suscripción?',
+        text: "Volverás al plan Free. Tus tablas y usuarios actuales NO se borrarán, pero se aplicarán los límites y no podrás crear nuevos. Dejaremos de cobrarte el mes que viene.",
+        icon: 'warning',
+        heightAuto: false,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, cancelar Premium',
+        cancelButtonText: 'Mantener Premium'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({ title: 'Cancelando suscripción en Stripe...', heightAuto: false, didOpen: () => { Swal.showLoading(); } });
+
+            fetch('/Settings/CancelarPremium', { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cancelar la suscripción');
+                    return response;
+                })
+                .then(() => {
+                    Swal.fire({
+                        title: 'Suscripción cancelada',
+                        text: 'Has vuelto al plan Free de forma exitosa.',
+                        icon: 'success',
+                        heightAuto: false,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => window.location.reload());
+                })
+                .catch(error => {
+                    Swal.fire('Error', error.message, 'error');
+                });
+        }
+    });
+}

@@ -25,6 +25,10 @@ namespace ProyectoSyncro.Controllers
         {
             int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
             string nombreUser = HttpContext.User.Identity.Name;
+            string plan = HttpContext.User.FindFirst("Plan").Value;
+
+            ViewData["esPremium"] = plan == "Free" ? false : true;
+
 
             List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
 

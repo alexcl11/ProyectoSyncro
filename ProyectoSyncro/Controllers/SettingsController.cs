@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSyncro.Models;
 using ProyectoSyncro.Repositories;
+using Stripe;
 using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
@@ -13,11 +14,14 @@ namespace ProyectoSyncro.Controllers
     {
         private SettingsRepository repo;
         private BaseRepository baseRepo;
+        private IConfiguration configuration;
 
-        public SettingsController(SettingsRepository repo, BaseRepository baseRepo) : base(baseRepo)
+        public SettingsController
+            (SettingsRepository repo, BaseRepository baseRepo, IConfiguration configuration) : base(baseRepo)
         {
             this.repo = repo;
             this.baseRepo = baseRepo;
+            this.configuration = configuration;
         }
 
         public async Task<IActionResult> Index()
@@ -48,7 +52,7 @@ namespace ProyectoSyncro.Controllers
             return View();
         }
 
-        // Fíjate en esto: ¡Bloquea automáticamente a cualquiera que no sea Admin!
+        
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> UpdateEmpresa(string cif, string nombreEmpresa, string empresaActiva)
@@ -175,6 +179,55 @@ namespace ProyectoSyncro.Controllers
             catch (Exception)
             {
                 return BadRequest("No se pudo eliminar la empresa.");
+            }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<IActionResult> CancelarPremium()
+        {
+            try
+            {
+                int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+                string emailUsuario = HttpContext.User.FindFirst("Email")?.Value;
+
+                if (string.IsNullOrEmpty(emailUsuario)) return BadRequest("Email no encontrado.");
+
+                // 1. Nos conectamos a Stripe con tu clave secreta
+                StripeConfiguration.ApiKey = this.configuration.GetSection("Stripe")["SecretKey"];
+
+                // 2. Buscamos al cliente en Stripe por su email
+                var customerService = new CustomerService();
+                var customers = await customerService.ListAsync(new CustomerListOptions { Email = emailUsuario });
+                var customer = customers.FirstOrDefault();
+
+                if (customer != null)
+                {
+                    // 3. Buscamos su suscripción activa
+                    var subscriptionService = new SubscriptionService();
+                    var subscriptions = await subscriptionService.ListAsync(new SubscriptionListOptions
+                    {
+                        Customer = customer.Id,
+                        Status = "active"
+                    });
+
+                    var activeSubscription = subscriptions.FirstOrDefault();
+
+                    // 4. Cancelamos la suscripción en Stripe para que no le cobren más
+                    if (activeSubscription != null)
+                    {
+                        await subscriptionService.CancelAsync(activeSubscription.Id);
+                    }
+                }
+
+                // 5. Actualizamos tu base de datos local
+                await this.repo.CancelarPlanEmpresaAsync(idEmpresa);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error al cancelar en Stripe: " + ex.Message);
             }
         }
     }

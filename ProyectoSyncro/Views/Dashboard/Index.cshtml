@@ -8,6 +8,7 @@
     var columnasFecha = definicionColumnas?.Where(c => c.TipoDato == "Fecha").Select(c => c.Nombre).ToList() ?? new List<string>();
     var columnasSelect = definicionColumnas?.Where(c => c.TipoDato == "Select").Select(c => c.Nombre).ToList() ?? new List<string>();
     var colTituloBase = definicionColumnas?.FirstOrDefault(c => c.TipoDato == "Texto" && c.Nombre.ToLower() != "id")?.Nombre ?? "Id";
+    bool esPremium = (bool)ViewData["esPremium"];
 }
 
 <script>
@@ -98,6 +99,17 @@
                 <span style="margin-left: 6px; font-size: 1.1rem; line-height: 1;">&times;</span>
             </a>
         }
+        @if (esPremium && ViewData["Title"]!=null)
+        {
+            <button type="button" class="btn btn-outline" onclick="exportarTablaAPDF('tabla-datos-id', '@ViewData["Title"]')">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 6px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Exportar PDF
+            </button>
+        }
         <button class="btn btn-primary" onclick="openRecordModal()" type="button">
             <svg class="icon" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -122,7 +134,7 @@
                 return "<svg class='th-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round'><path d='M4 7V4h16v3'></path><path d='M9 20h6'></path><line x1='12' y1='4' x2='12' y2='20'></line></svg>";
             }
 
-            <table class="data-table">
+            <table class="data-table" id="tabla-datos-id">
                 <thead>
                     <tr>
                         <th class="col-checkbox">

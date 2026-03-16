@@ -159,5 +159,15 @@ namespace ProyectoSyncro.Repositories
                 await this.context.SaveChangesAsync();
             }
         }
+        public async Task CancelarPlanEmpresaAsync(int idEmpresa)
+        {
+            var empresa = await this.context.Empresas.FindAsync(idEmpresa);
+
+            if (empresa != null)
+            {
+                empresa.IsPremium = false;
+                await this.context.SaveChangesAsync();
+            }
+        }
     }
 }

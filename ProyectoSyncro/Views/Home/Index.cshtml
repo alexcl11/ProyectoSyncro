@@ -641,28 +641,32 @@
                             <p class="price-desc">Perfecto para empezar a organizar tu caos.</p>
                             <div class="price">€0 <span>/mes</span></div>
                             <ul>
-                                <li>1 Espacio de trabajo</li>
-                                <li>Hasta 1,000 registros</li>
+                                <li>Hasta 3 Usuarios</li>
+                                <li>Hasta 3 Tablas</li>
                                 <li>Vistas de Tabla y Calendario</li>
                                 <li>Soporte por email</li>
                             </ul>
-                            <button class="btn btn-outline">Empezar gratis</button>
+                            <a asp-controller="Auth" asp-action="Register" 
+                            class="btn btn-outline">
+                                Empezar gratis
+                            </a>
                         </article>
 
                         <article class="price-card highlight">
                             <div class="badge">RECOMENDADO</div>
                             <h3>Pro</h3>
                             <p class="price-desc">Para equipos que necesitan potencia ilimitada.</p>
-                            <div class="price">€29 <span>/mes</span></div>
+                            <div class="price">9.99 €<span>/mes</span></div>
                             <ul>
-                                <li>Espacios ilimitados</li>
                                 <li>Registros ilimitados</li>
-                                <li>Automatizaciones avanzadas</li>
-                                <li>Roles y permisos granulares</li>
+                                <li>Tablas ilimitados</li>
+                                <li>Usuarios ilimitados</li>
                                 <li>Soporte prioritario 24/7</li>
-                                <li>Backups diarios</li>
                             </ul>
-                            <button class="btn btn-primary">Prueba gratuita de 14 dias</button>
+                            <a asp-controller="Auth" asp-action="Register" asp-route-plan="premium"
+                               class="btn btn-primary">
+                                Empezar siendo Premium
+                            </a>
                         </article>
                     </div>
                 </div>
