@@ -929,6 +929,7 @@ body.swal2 - shown {
     /* Reducimos un pelín el título para que respire más */
     .topbar-title {
         font-size: 1.1rem;
+        font-size: 1.1rem;
     }
 
     /* Quitamos el padding lateral enorme de la cabecera en móvil */

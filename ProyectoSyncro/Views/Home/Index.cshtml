@@ -75,11 +75,10 @@
                         Sin codigo, sin limites y adaptado exactamente a tu forma de trabajar.
                     </p>
                     <div class="hero-actions">
-                        <button class="btn btn-primary btn-lg">
+                        <a asp-controller="Auth" asp-action="Register" class="btn btn-primary btn-lg">
                             Crear mi espacio de trabajo
                             <span class="icon">→</span>
-                        </button>
-                        <button class="btn btn-outline btn-lg">Ver demo en vivo</button>
+                        </a>
                     </div>
                     <div class="hero-trust">
                         <span>Sin tarjeta de credito</span>
@@ -186,18 +185,7 @@
                 </div>
             </section>
 
-            <section class="logos">
-                <div class="container">
-                    <p>Empresas de todos los tamanos ya organizan su caos con nosotros:</p>
-                    <div class="logo-row">
-                        <span>◇ JL Marlo Renovation</span>
-                        <span>⬡ Design Studio 54</span>
-                        <span>△ Alpha Construction</span>
-                        <span>● Omega Marketing</span>
-                        <span>■ TechFlow Systems</span>
-                    </div>
-                </div>
-            </section>
+            
 
             <section class="features" id="features">
                 <div class="container">
@@ -405,10 +393,8 @@
                                 </p>
                                 <ul>
                                     <li>Plantilla pre-disenada incluida</li>
-                                    <li>Automatizaciones listas para usar</li>
                                     <li>Exportacion a PDF en un clic</li>
                                 </ul>
-                                <button class="link-button">Ver plantilla de Reformas →</button>
                             </div>
                             <div class="panel-mockup">
                                 <div class="mockup-browser">
@@ -482,10 +468,8 @@
                                 </p>
                                 <ul>
                                     <li>Plantilla pre-disenada incluida</li>
-                                    <li>Automatizaciones listas para usar</li>
                                     <li>Exportacion a PDF en un clic</li>
                                 </ul>
-                                <button class="link-button">Ver plantilla de Agencias →</button>
                             </div>
                             <div class="panel-mockup">
                                 <div class="mockup-browser">
@@ -559,10 +543,8 @@
                                 </p>
                                 <ul>
                                     <li>Plantilla pre-disenada incluida</li>
-                                    <li>Automatizaciones listas para usar</li>
                                     <li>Exportacion a PDF en un clic</li>
                                 </ul>
-                                <button class="link-button">Ver plantilla de Freelance →</button>
                             </div>
                             <div class="panel-mockup">
                                 <div class="mockup-browser">
@@ -680,8 +662,10 @@
                         Unete a las empresas que ya han dejado atras las hojas de calculo.
                         Sin tarjeta de credito requerida.
                     </p>
-                    <button class="btn btn-light btn-lg">Empezar ahora gratis</button>
-                    <span class="cta-note">14 dias de prueba en el plan Pro. Cancela cuando quieras.</span>
+                    <a asp-controller="Auth" asp-action="Register" 
+                    class="btn btn-light btn-lg">
+                        Empezar ahora gratis
+                    </a>
                 </div>
             </section>
         </main>

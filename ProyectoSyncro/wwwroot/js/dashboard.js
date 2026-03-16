@@ -67,6 +67,11 @@ function eliminarOpcion(btn) {
 function actualizarSiNo(tabla, idFila, columna, estaMarcado) {
     var valorSql = estaMarcado ? "1" : "0";
 
+    var filaEnMemoria = tableDataRaw.find(f => String(f['Id']) === String(idFila));
+    if (filaEnMemoria) {
+        filaEnMemoria[columna] = estaMarcado;
+    }
+
     // EN ESTA PARTE DEL CODIGO CREO UN FORMULARIO TEMPORAL PARA ENVIAR LOS
     // DATOS MEDIANTE POST
     var formData = new FormData();
@@ -323,7 +328,7 @@ function guardarEdicionCelda(td, idFila, columna, nuevoValor, contenidoOriginal,
         textoVisual = '&nbsp;';
     } else if (tipoDato === 'Select') {
         var selectedOption = inputElement.options[inputElement.selectedIndex];
-        var color = selectedOption.dataset.color || '#64748b'; 
+        var color = selectedOption.dataset.color || '#64748b';
         textoVisual = `<span class="chip" style="background-color: ${color}; color: #ffffff; border: none;">${nuevoValor}</span>`;
     } else if (tipoDato === 'Relacion') {
         var selectedOption = inputElement.options[inputElement.selectedIndex];
@@ -334,6 +339,23 @@ function guardarEdicionCelda(td, idFila, columna, nuevoValor, contenidoOriginal,
     }
 
     td.innerHTML = textoVisual;
+
+    // Actualizamos el atributo onclick para que recuerde el valor nuevo
+    var valorEscapado = nuevoValor.replace(/'/g, "\\'"); // Protegemos por si alguien escribe un nombre con apóstrofe (Ej: O'Connor)
+    td.setAttribute('onclick', `hacerCeldaEditable(this, '${idFila}', '${columna}', '${tipoDato}', '${valorEscapado}', '${nombreTabla}')`);
+
+    var filaEnMemoria = tableDataRaw.find(f => String(f['Id']) === String(idFila));
+    if (filaEnMemoria) {
+        // Guardamos el valor nuevo para que Kanban y Calendario lo vean
+        filaEnMemoria[columna] = nuevoValor;
+    }
+
+    // También actualizamos el texto flotante por si pasan el ratón por encima
+    if (tipoDato === 'Relacion' || tipoDato === 'Select') {
+        td.setAttribute('title', textoVisual.replace(/<[^>]*>?/gm, '')); // Le quitamos el HTML del span al title
+    } else {
+        td.setAttribute('title', nuevoValor);
+    }
 
 
     var formData = new FormData();
@@ -349,7 +371,7 @@ function guardarEdicionCelda(td, idFila, columna, nuevoValor, contenidoOriginal,
         .then(response => {
             if (!response.ok) {
                 td.innerHTML = contenidoOriginal;
-                alSwal.fire({
+                Swal.fire({
                     title: 'No se ha podido actualizar',
                     text: 'El registro no se ha podido actualizar correctamente en la base de datos',
                     icon: 'warning',
@@ -688,33 +710,59 @@ function guardarEdicionColumna(event) {
 // ==========================================
 // MENÚ DE 3 PUNTOS EN COLUMNAS
 // ==========================================
+
 function toggleColumnMenu(event, menuId) {
-    // 1. Evitamos que el clic se propague y cierre el menú inmediatamente
+    // 1. Evitamos que el clic se propague
     event.stopPropagation();
 
-    // 2. Cerramos cualquier otro menú que estuviera abierto
+    // 2. Cerramos cualquier otro menú abierto
     document.querySelectorAll('.column-dropdown').forEach(menu => {
         if (menu.id !== menuId) {
             menu.style.display = 'none';
         }
     });
 
-    // 3. Abrimos/Cerramos el menú al que hemos hecho clic
     var menu = document.getElementById(menuId);
-    if (menu.style.display === 'flex') {
+
+    // 3. Abrimos o cerramos
+    if (menu.style.display === 'flex' || menu.style.display === 'block') {
         menu.style.display = 'none';
     } else {
+        // Capturamos el botón exacto que has clicado y sacamos sus coordenadas
+        var boton = event.currentTarget;
+        var coordenadas = boton.getBoundingClientRect();
+
+        // Lo sacamos de la jerarquía HTML y lo fijamos a la pantalla
+        menu.style.position = 'fixed';
+
+        // Lo colocamos exactamente 4 píxeles por debajo del botón
+        menu.style.top = (coordenadas.bottom + 4) + 'px';
+
+        // Calculamos la distancia desde la derecha para que no se salga
+        menu.style.left = 'auto';
+        menu.style.right = (document.documentElement.clientWidth - coordenadas.right) + 'px';
+
+        // Lo mostramos
         menu.style.display = 'flex';
     }
 }
 
-// Escuchamos los clics en todo el documento para cerrar el menú si se hace clic fuera
-document.addEventListener('click', function (event) {
+// Cerramos el menú al hacer clic en cualquier parte de la pantalla
+document.addEventListener('click', function () {
     document.querySelectorAll('.column-dropdown').forEach(menu => {
         menu.style.display = 'none';
     });
 });
 
+// Si el usuario hace scroll en la tabla mientras el menú está abierto, lo cerramos
+var tableContainer = document.querySelector('.data-table-container');
+if (tableContainer) {
+    tableContainer.addEventListener('scroll', function() {
+        document.querySelectorAll('.column-dropdown').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    });
+}
 
 // ==========================================
 // SISTEMA DE FILTROS DINÁMICOS
