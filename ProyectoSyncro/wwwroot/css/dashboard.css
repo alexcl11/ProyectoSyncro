@@ -937,26 +937,25 @@ body.swal2 - shown {
         padding: 0 16px;
     }
 }
-
 /* ==========================================
-   WIDGET FLOTANTE DE IA (CHATBOT)
+   WIDGET FLOTANTE DE IA (ESTILO NOTION AI)
    ========================================== */
 
-/* Botón flotante para abrir el chat */
+/* Botón flotante para abrir el chat (Lo mantenemos con tu marca) */
 .chatbot-trigger {
     position: fixed;
     bottom: 24px;
     right: 24px;
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, var(--brand) 0%, #1e3a8a 100%);
+    background: #2383E2; /* Azul estilo Notion */
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(36, 84, 147, 0.3);
+    box-shadow: rgba(35, 131, 226, 0.3) 0px 10px 25px;
     border: none;
     z-index: 999;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -964,10 +963,10 @@ body.swal2 - shown {
 
     .chatbot-trigger:hover {
         transform: scale(1.05);
-        box-shadow: 0 15px 30px rgba(36, 84, 147, 0.4);
+        box-shadow: rgba(35, 131, 226, 0.4) 0px 15px 30px;
     }
 
-/* La ventana del chat (oculta por defecto) */
+/* La ventana del chat */
 .chatbot-window {
     position: fixed;
     bottom: 100px;
@@ -975,10 +974,10 @@ body.swal2 - shown {
     width: 380px;
     height: 600px;
     max-height: calc(100vh - 120px);
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
-    border: 1px solid var(--border);
+    background: #FFFFFF;
+    border-radius: 12px; /* Esquinas más sutiles */
+    /* Sombra premium tipo Notion */
+    box-shadow: rgba(15, 15, 15, 0.05) 0px 0px 0px 1px, rgba(15, 15, 15, 0.1) 0px 5px 10px, rgba(15, 15, 15, 0.2) 0px 15px 40px;
     display: flex;
     flex-direction: column;
     z-index: 999;
@@ -987,6 +986,7 @@ body.swal2 - shown {
     transform: translateY(20px);
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
     .chatbot-window.active {
@@ -995,14 +995,15 @@ body.swal2 - shown {
         transform: translateY(0);
     }
 
-/* Cabecera del Chat */
+/* Cabecera del Chat (Limpia y blanca) */
 .chatbot-header {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    color: white;
-    padding: 20px;
+    background: #FFFFFF;
+    color: #37352F;
+    padding: 16px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #E9E9E7;
 }
 
 .chatbot-header-info {
@@ -1012,25 +1013,26 @@ body.swal2 - shown {
 }
 
 .chatbot-avatar {
-    width: 36px;
-    height: 36px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    background: #F7F7F5;
+    border: 1px solid #E9E9E7;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #37352F;
 }
 
 .chatbot-header-title {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 700;
-    font-size: 1.05rem;
+    font-weight: 600;
+    font-size: 1rem;
     margin: 0 0 2px 0;
 }
 
 .chatbot-header-status {
     font-size: 0.75rem;
-    color: #34d399;
+    color: #787774; /* Gris suave en lugar de verde neón */
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1044,15 +1046,16 @@ body.swal2 - shown {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    background: #f8fafc;
+    background: #FFFFFF; /* Fondo blanco puro */
 }
 
-/* Burbujas de chat */
-.chat-msg {
+/* Burbujas de chat (Cambio a .chatbot-message para que coincida con tu JS) */
+.chatbot-message {
     max-width: 85%;
     padding: 12px 16px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     line-height: 1.5;
+    border-radius: 8px;
     animation: fadeInMsg 0.3s ease;
 }
 
@@ -1068,28 +1071,49 @@ body.swal2 - shown {
     }
 }
 
-.chat-msg.ai {
+.chatbot-message.ai {
     align-self: flex-start;
-    background: #ffffff;
-    color: var(--text-main);
-    border: 1px solid var(--border);
-    border-radius: 16px 16px 16px 4px;
-    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.02);
+    background: #F7F7F5; /* El gris ultra-claro característico de Notion */
+    color: #37352F;
+    border: 1px solid #E9E9E7;
+    border-bottom-left-radius: 2px;
 }
 
-.chat-msg.user {
+.chatbot-message.user {
     align-self: flex-end;
-    background: var(--brand);
-    color: #ffffff;
-    border-radius: 16px 16px 4px 16px;
-    box-shadow: 0 4px 10px rgba(36, 84, 147, 0.2);
+    background: #2383E2;
+    color: #FFFFFF;
+    border-bottom-right-radius: 2px;
+}
+
+/* ESTILOS PARA EL MARKDOWN DE LA IA */
+.chatbot-message.ai p {
+    margin: 0 0 10px 0;
+}
+
+    .chatbot-message.ai p:last-child {
+        margin-bottom: 0;
+    }
+
+.chatbot-message.ai strong {
+    color: #000000;
+    font-weight: 600;
+}
+
+.chatbot-message.ai ul, .chatbot-message.ai ol {
+    margin: 8px 0;
+    padding-left: 24px;
+}
+
+.chatbot-message.ai li {
+    margin-bottom: 6px;
 }
 
 /* Área de escribir mensaje */
 .chatbot-input-area {
-    padding: 16px;
-    background: #ffffff;
-    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    background: #FFFFFF;
+    border-top: 1px solid #E9E9E7;
     display: flex;
     gap: 8px;
     align-items: flex-end;
@@ -1097,32 +1121,33 @@ body.swal2 - shown {
 
 .chatbot-input {
     flex: 1;
-    border: 1px solid var(--border);
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 12px 16px;
+    border: 1px solid transparent;
+    background: #F7F7F5;
+    border-radius: 8px;
+    padding: 10px 14px;
     font-family: inherit;
-    font-size: 0.9rem;
-    color: var(--text-main);
+    font-size: 0.95rem;
+    color: #37352F;
     outline: none;
     resize: none;
     max-height: 100px;
-    min-height: 44px;
-    transition: border-color 0.2s;
+    min-height: 40px;
+    transition: all 0.2s ease;
 }
 
     .chatbot-input:focus {
-        border-color: var(--brand);
-        background: #ffffff;
+        background: #FFFFFF;
+        border-color: #2383E2;
+        box-shadow: rgba(35, 131, 226, 0.2) 0px 0px 0px 3px;
     }
 
 .chatbot-send-btn {
-    background: var(--brand);
+    background: #2383E2;
     color: white;
     border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1132,11 +1157,12 @@ body.swal2 - shown {
 }
 
     .chatbot-send-btn:hover {
-        background: #1e3a8a;
+        background: #1a65b0;
     }
 
     .chatbot-send-btn:disabled {
-        background: #cbd5e1;
+        background: #E9E9E7;
+        color: #9CA3AF;
         cursor: not-allowed;
     }
 
@@ -1144,13 +1170,13 @@ body.swal2 - shown {
 .typing-indicator {
     display: flex;
     gap: 4px;
-    padding: 4px 8px;
+    padding: 4px 0;
 }
 
 .typing-dot {
     width: 6px;
     height: 6px;
-    background: #94a3b8;
+    background: #9CA3AF;
     border-radius: 50%;
     animation: typingBounce 1.4s infinite ease-in-out both;
 }
@@ -1173,36 +1199,26 @@ body.swal2 - shown {
     }
 }
 
-/* Responsivo para móviles */
-@media (max-width: 768px) {
-    .chatbot-window {
-        width: calc(100% - 32px);
-        right: 16px;
-        bottom: 90px;
-    }
-}
-
-/* Contenedor de las sugerencias (scroll horizontal oculto) */
+/* Sugerencias (Píldoras) */
 .chatbot-suggestions {
     display: flex;
     gap: 8px;
-    padding: 10px;
+    padding: 10px 16px;
     overflow-x: auto;
-    scrollbar-width: none; /* Ocultar barra en Firefox */
-    border-top: 1px solid #e5e7eb;
-    background-color: #f9fafb;
+    scrollbar-width: none;
+    border-top: 1px solid #E9E9E7;
+    background-color: #FFFFFF;
 }
 
     .chatbot-suggestions::-webkit-scrollbar {
-        display: none; /* Ocultar barra en Chrome/Edge */
+        display: none;
     }
 
-/* Diseño de la píldora */
 .chat-suggestion-btn {
     white-space: nowrap;
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    color: #374151;
+    background: #FFFFFF;
+    border: 1px solid #E9E9E7;
+    color: #37352F;
     padding: 6px 12px;
     border-radius: 16px;
     font-size: 0.8rem;
@@ -1211,7 +1227,15 @@ body.swal2 - shown {
 }
 
     .chat-suggestion-btn:hover {
-        background: #eff6ff;
-        border-color: #3b82f6;
-        color: #1d4ed8;
+        background: #F7F7F5;
+        border-color: #D1D1D1;
     }
+
+/* Responsivo para móviles */
+@media (max-width: 768px) {
+    .chatbot-window {
+        width: calc(100% - 32px);
+        right: 16px;
+        bottom: 90px;
+    }
+}

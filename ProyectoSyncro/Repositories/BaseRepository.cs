@@ -48,7 +48,7 @@ namespace ProyectoSyncro.Repositories
         string sortCol = "Id", string sortDir = "DESC",
         string filterCol = null, string filterOp = null, string filterVal = null)
         {
-            string sql = "SP_MOTRAR_TABLA_EMPRESA";
+            string sql = "SP_MOSTRAR_TABLA_EMPRESA";
             var datos = new List<Dictionary<string, object>>();
 
             using (DbCommand com = this.context.Database.GetDbConnection().CreateCommand())
@@ -57,15 +57,31 @@ namespace ProyectoSyncro.Repositories
                 com.CommandText = sql;
 
                 // Parámetros base
+                // ... (código anterior) ...
                 com.Parameters.Add(new SqlParameter("@IdEmpresa", idEmpresa));
                 com.Parameters.Add(new SqlParameter("@nombreTabla", nombreTabla));
                 com.Parameters.Add(new SqlParameter("@SortCol", string.IsNullOrEmpty(sortCol) ? "Id" : sortCol));
                 com.Parameters.Add(new SqlParameter("@SortDir", string.IsNullOrEmpty(sortDir) ? "DESC" : sortDir));
 
-                // Parámetros de filtrado
+
+                object valorFiltroFinal = (object)filterVal ?? DBNull.Value;
+
+                if (!string.IsNullOrEmpty(filterVal))
+                {
+
+                    string[] formatos = { "yyyy-MM-dd", "dd/MM/yyyy", "dd-MM-yyyy" };
+
+                    if (DateTime.TryParseExact(filterVal, formatos, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fechaFiltro))
+                    {
+                        // Si detecta que es una fecha, la blindamos al formato universal de SQL
+                        valorFiltroFinal = fechaFiltro.ToString("yyyy-MM-ddTHH:mm:ss");
+                    }
+                }
+
                 com.Parameters.Add(new SqlParameter("@FilterCol", (object)filterCol ?? DBNull.Value));
                 com.Parameters.Add(new SqlParameter("@FilterOp", (object)filterOp ?? DBNull.Value));
-                com.Parameters.Add(new SqlParameter("@FilterVal", (object)filterVal ?? DBNull.Value));
+
+                com.Parameters.Add(new SqlParameter("@FilterVal", valorFiltroFinal));
 
                 await com.Connection.OpenAsync();
                 using (DbDataReader reader = await com.ExecuteReaderAsync())

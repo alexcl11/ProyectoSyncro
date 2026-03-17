@@ -24,12 +24,14 @@ namespace ProyectoSyncro.Controllers
 
         [Authorize]
         [HttpPost("AskAi")]
-        public async Task<IActionResult> AskAi([FromForm] string prompt, [FromForm] string? tablaActual)
+        public async Task<IActionResult> AskAi([FromForm] string prompt, [FromForm] string tablaActual = "")
         {
             int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
 
-            string contextoExtra = string.IsNullOrEmpty(tablaActual) ? "" : $"[CONTEXTO: El usuario está viendo actualmente la tabla '{tablaActual}']. ";
-            string mensajeParaN8n = $"[IdEmpresa: {idEmpresa}]\nUsuario: {prompt}";
+            string contextoExtra = string.IsNullOrEmpty(tablaActual) ? "" : $"[CONTEXTO: El usuario está viendo la tabla '{tablaActual}'].\n";
+
+            string mensajeParaN8n = $"[IdEmpresa: {idEmpresa}]\n{contextoExtra}Usuario: {prompt}";
+
 
             try
             {

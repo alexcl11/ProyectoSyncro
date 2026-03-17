@@ -53,7 +53,6 @@ function handleChatbotKeyPress(event) {
         sendChatbotMessage();
     }
 }
-
 // Función principal para enviar el mensaje
 function sendChatbotMessage() {
     var input = document.getElementById('chatbot-input');
@@ -64,8 +63,8 @@ function sendChatbotMessage() {
     var messagesContainer = document.getElementById('chatbot-messages');
     var sendBtn = document.getElementById('chatbot-send-btn');
 
-    // 1. Pintamos el mensaje del usuario
-    var userMsgHTML = `<div class="chat-msg user">${messageText}</div>`;
+    // 1. Pintamos el mensaje del usuario (Actualizado a la nueva clase CSS 'chatbot-message')
+    var userMsgHTML = `<div class="chatbot-message user">${messageText}</div>`;
     messagesContainer.insertAdjacentHTML('beforeend', userMsgHTML);
 
     // --- GUARDAMOS AQUÍ (Mensaje del usuario registrado) ---
@@ -75,10 +74,10 @@ function sendChatbotMessage() {
     sendBtn.disabled = true;
     scrollToBottomChat();
 
-    // 2. Pintamos el indicador de "Escribiendo..."
+    // 2. Pintamos el indicador de "Escribiendo..." (Actualizado a la nueva clase)
     var typingId = 'typing-' + Date.now();
     var typingHTML = `
-        <div class="chat-msg ai" id="${typingId}">
+        <div class="chatbot-message ai" id="${typingId}">
             <div class="typing-indicator">
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
@@ -95,7 +94,7 @@ function sendChatbotMessage() {
     const tablaActual = urlParams.get('tabla');
 
     if (tablaActual) {
-        formData.append('tablaActual', tablaActual); 
+        formData.append('tablaActual', tablaActual);
     }
 
     fetch('/api/AiIntegration/AskAi', {
@@ -112,7 +111,12 @@ function sendChatbotMessage() {
         .then(data => {
             document.getElementById(typingId).remove();
 
-            var aiMsgHTML = `<div class="chat-msg ai">${data.respuesta}</div>`;
+            // 🔥 AQUÍ OCURRE LA MAGIA DEL MARKDOWN 🔥
+            // Convertimos los asteriscos y listas de la IA en HTML real
+            const htmlFormateado = marked.parse(data.respuesta);
+
+            // Pintamos la respuesta usando la nueva clase y el HTML formateado
+            var aiMsgHTML = `<div class="chatbot-message ai">${htmlFormateado}</div>`;
             messagesContainer.insertAdjacentHTML('beforeend', aiMsgHTML);
 
             // --- GUARDAMOS AQUÍ (Respuesta de la IA registrada) ---
@@ -151,7 +155,7 @@ function sendChatbotMessage() {
             const tNode = document.getElementById(typingId);
             if (tNode) tNode.remove();
 
-            var errorHTML = `<div class="chat-msg ai" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">
+            var errorHTML = `<div class="chatbot-message ai" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">
                 ⚠️ <b>Error:</b> ${error.message}
             </div>`;
             messagesContainer.insertAdjacentHTML('beforeend', errorHTML);
@@ -163,6 +167,7 @@ function sendChatbotMessage() {
             sendBtn.disabled = false;
         });
 }
+
 // Función auxiliar para que el chat baje automáticamente al último mensaje
 function scrollToBottomChat() {
     var messagesContainer = document.getElementById('chatbot-messages');
