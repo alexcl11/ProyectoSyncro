@@ -91,6 +91,13 @@ function sendChatbotMessage() {
     var formData = new FormData();
     formData.append('prompt', messageText);
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const tablaActual = urlParams.get('tabla');
+
+    if (tablaActual) {
+        formData.append('tablaActual', tablaActual); 
+    }
+
     fetch('/api/AiIntegration/AskAi', {
         method: 'POST',
         body: formData
@@ -114,9 +121,27 @@ function sendChatbotMessage() {
             scrollToBottomChat();
             sendBtn.disabled = false;
 
-            const palabrasClave = ["creado", "tabla", "añadida", "lista"];
-            if (palabrasClave.some(p => data.respuesta.toLowerCase().includes(p))) {
-                refrescarMenuLateral();
+            const mensajeIA = data.respuesta.toLowerCase();
+
+            // 1. Detectamos si la IA nos está informando de un fallo
+            const palabrasError = ["error", "fallo", "problema", "no he podido", "lo siento", "no pude"];
+            const hayError = palabrasError.some(p => mensajeIA.includes(p));
+
+            // Solo ejecutamos las recargas si NO hay errores
+            if (!hayError) {
+                // 2. Palabras para cuando crea Tablas/Columnas
+                const palabrasEstructura = ["creado", "tabla", "columna", "lista nueva"];
+                if (palabrasEstructura.some(p => mensajeIA.includes(p))) {
+                    refrescarMenuLateral();
+                }
+
+                // 3. Palabras para cuando inserta Datos
+                const palabrasDatos = ["insertado", "añadido", "registro", "guardado", "fila"];
+                if (palabrasDatos.some(p => mensajeIA.includes(p))) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
             }
 
             input.focus();
@@ -142,4 +167,15 @@ function sendChatbotMessage() {
 function scrollToBottomChat() {
     var messagesContainer = document.getElementById('chatbot-messages');
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Función para los botones de sugerencias
+function usarSugerencia(texto) {
+    var input = document.getElementById('chatbot-input');
+
+    // Rellenamos el input con el texto oculto del botón
+    input.value = texto;
+
+    // Simulamos que el usuario le ha dado a Enviar automáticamente
+    sendChatbotMessage();
 }

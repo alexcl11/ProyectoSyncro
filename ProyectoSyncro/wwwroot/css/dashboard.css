@@ -1181,3 +1181,37 @@ body.swal2 - shown {
         bottom: 90px;
     }
 }
+
+/* Contenedor de las sugerencias (scroll horizontal oculto) */
+.chatbot-suggestions {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Ocultar barra en Firefox */
+    border-top: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+    .chatbot-suggestions::-webkit-scrollbar {
+        display: none; /* Ocultar barra en Chrome/Edge */
+    }
+
+/* Diseño de la píldora */
+.chat-suggestion-btn {
+    white-space: nowrap;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .chat-suggestion-btn:hover {
+        background: #eff6ff;
+        border-color: #3b82f6;
+        color: #1d4ed8;
+    }

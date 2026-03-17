@@ -259,7 +259,11 @@
                     <br><br>¿Qué te gustaría crear hoy?
                 </div>
             </div>
-
+            <div class="chatbot-suggestions" id="chatbot-suggestions">
+                <button type="button" class="chat-suggestion-btn" onclick="usarSugerencia('✨ Crea una tabla nueva')">✨ Nueva tabla</button>
+                <button type="button" class="chat-suggestion-btn" onclick="usarSugerencia('📊 Hazme un resumen de los registros de esta tabla')">📊 Resumir datos</button>
+                <button type="button" class="chat-suggestion-btn" onclick="usarSugerencia('❓ ¿Qué cosas puedes hacer por mí?')">❓ Ayuda</button>
+            </div>
             <div class="chatbot-input-area">
                 <textarea id="chatbot-input" class="chatbot-input" placeholder="Ej: Créame una tabla de Empleados con Nombre y Fecha de alta..." rows="1" onkeydown="handleChatbotKeyPress(event)"></textarea>
                 <button id="chatbot-send-btn" class="chatbot-send-btn" onclick="sendChatbotMessage()">

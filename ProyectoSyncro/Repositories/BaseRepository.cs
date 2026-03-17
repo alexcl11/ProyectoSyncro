@@ -44,9 +44,9 @@ namespace ProyectoSyncro.Repositories
         }
 
         public async Task<List<Dictionary<string, object>>> GetDatosTablaEmpresaAsync(
-    int idEmpresa, string nombreTabla,
-    string sortCol = "Id", string sortDir = "DESC",
-    string filterCol = null, string filterOp = null, string filterVal = null)
+        int idEmpresa, string nombreTabla,
+        string sortCol = "Id", string sortDir = "DESC",
+        string filterCol = null, string filterOp = null, string filterVal = null)
         {
             string sql = "SP_MOTRAR_TABLA_EMPRESA";
             var datos = new List<Dictionary<string, object>>();
@@ -209,28 +209,33 @@ namespace ProyectoSyncro.Repositories
                         // Si es fecha, la guardamos en el formato universal irrompible para SQL
                         valoresLimpios.Add(valor.Key, fechaConvertida.ToString("yyyy-MM-ddTHH:mm:ss"));
                     }
-                    else if (valor.Value == "on" || valor.Value == "off")
+                    else
                     {
-                        if (valor.Value == "on")
+                        // Limpiamos el valor para que sea minúscula y sin espacios (" Si " -> "si")
+                        string val = valor.Value.Trim().ToLower();
+
+                        if (val == "on" || val == "si" || val == "sí" || val == "true" || val == "1" || val == "yes")
                         {
                             valoresLimpios.Add(valor.Key, "1");
                         }
-                        else
+                        else if (val == "off" || val == "no" || val == "false" || val == "0")
                         {
                             valoresLimpios.Add(valor.Key, "0");
                         }
+                        else
+                        {
+                            // Si es un texto o número normal, lo guardamos tal cual
+                            valoresLimpios.Add(valor.Key, valor.Value);
+                        }
                     }
-                    else
-                    {
-                        // Si es un texto o número normal, lo guardamos tal cual
-                        valoresLimpios.Add(valor.Key, valor.Value);
-                    }
+                   
                 }
             }
 
-            if (valoresLimpios.Count == 0) 
+            if (valoresLimpios.Count == 0)
             {
-                return; 
+                
+                throw new Exception("Operación abortada: La IA no envió valores válidos o los nombres de las columnas no coinciden con la tabla.");
             }
 
             string jsonData = JsonSerializer.Serialize(valoresLimpios);
