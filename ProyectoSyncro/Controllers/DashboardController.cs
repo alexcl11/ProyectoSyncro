@@ -243,5 +243,13 @@ namespace ProyectoSyncro.Controllers
                 return BadRequest("No se pudo actualizar la columna. Es posible que el tipo de dato no sea compatible con los registros actuales (ej: intentar pasar letras a números).");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSoloTablas()
+        {
+            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
+            List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+            return Json(tablas);
+        }
     }
 }

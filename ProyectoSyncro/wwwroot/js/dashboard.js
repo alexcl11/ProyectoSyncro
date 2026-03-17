@@ -1232,3 +1232,47 @@ function exportarTablaAPDF(idTabla, nombreTabla) {
     // 4. Descargar
     doc.save(`${nombreTabla}_Syncro_${fecha.replace(/\//g, '-')}.pdf`);
 }
+
+function refrescarMenuLateral() {
+    // Usamos una URL relativa y sin especificar método (por defecto es GET)
+    fetch('/Dashboard/GetSoloTablas')
+        .then(response => {
+            if (!response.ok) throw new Error("Error " + response.status);
+            return response.json();
+        })
+        .then(tablas => {
+            const contenedor = document.getElementById('contenedor-tablas-sidebar');
+            if (!contenedor) return;
+
+            if (tablas.length === 0) {
+                contenedor.innerHTML = '<div style="padding: 10px 15px; font-size: 0.8rem; color: var(--text-muted);">Aún no tienes tablas.</div>';
+                return;
+            }
+
+            // Construimos la lista idéntica a tu Layout
+            let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+
+            tablas.forEach(tabla => {
+                html += `
+                    <li style="display: flex; align-items: center; padding: 0 15px; margin-bottom: 4px;">
+                        <input type="checkbox" class="checkbox-tabla" value="${tabla}" onchange="mostrarPapeleraTablas()" style="cursor: pointer; margin-right: 8px;">
+
+                        <a href="/Dashboard/Index?tabla=${tabla}" class="nav-item" style="flex: 1; margin: 0; padding: 8px 10px;">
+                            ${tabla}
+                        </a>
+
+                        <button type="button" style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--brand);"
+                                onclick="renombrarTabla('${tabla}')" title="Renombrar tabla">
+                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                    </li>`;
+            });
+
+            html += '</ul>';
+            contenedor.innerHTML = html;
+        })
+        .catch(err => console.error("Fallo al refrescar:", err));
+}

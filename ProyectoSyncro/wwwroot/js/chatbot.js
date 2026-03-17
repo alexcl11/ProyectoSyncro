@@ -2,16 +2,50 @@
 // LÓGICA DEL ASISTENTE IA (CHATBOT)
 // ==========================================
 
+// Función para guardar en sessionStorage
+function guardarHistorialChat() {
+    const container = document.getElementById('chatbot-messages');
+    if (container) {
+        sessionStorage.setItem('chatbot_history', container.innerHTML);
+    }
+}
+
+// Al cargar la página, restaurar todo
+document.addEventListener("DOMContentLoaded", function () {
+    const history = sessionStorage.getItem('chatbot_history');
+    if (history) {
+        document.getElementById('chatbot-messages').innerHTML = history;
+        scrollToBottomChat();
+    }
+
+    // Opcional: Reabrir el chat si estaba abierto
+    if (sessionStorage.getItem('chatbot_open') === 'true') {
+        document.getElementById('chatbot-window').classList.add('active');
+    }
+});
+
+// 2. Función para cargar el historial al iniciar la página
+function cargarHistorialChat() {
+    const history = sessionStorage.getItem('chatbot_history');
+    if (history) {
+        const messagesContainer = document.getElementById('chatbot-messages');
+        messagesContainer.innerHTML = history;
+        scrollToBottomChat();
+    }
+}
+
+// 3. Modificar tu función toggleChatbot para recordar si estaba abierto
 function toggleChatbot() {
     var window = document.getElementById('chatbot-window');
     window.classList.toggle('active');
 
-    // Si lo abrimos, ponemos el foco en el input automáticamente
+    // Guardamos el estado (abierto/cerrado) para que no se esconda al cambiar de tabla
+    sessionStorage.setItem('chatbot_open', window.classList.contains('active'));
+
     if (window.classList.contains('active')) {
         document.getElementById('chatbot-input').focus();
     }
 }
-
 // Permitir enviar con la tecla "Enter" (sin Shift)
 function handleChatbotKeyPress(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -34,12 +68,14 @@ function sendChatbotMessage() {
     var userMsgHTML = `<div class="chat-msg user">${messageText}</div>`;
     messagesContainer.insertAdjacentHTML('beforeend', userMsgHTML);
 
-    // Limpiamos el input y bloqueamos el botón
+    // --- GUARDAMOS AQUÍ (Mensaje del usuario registrado) ---
+    guardarHistorialChat();
+
     input.value = '';
     sendBtn.disabled = true;
     scrollToBottomChat();
 
-    // 2. Pintamos el indicador de "Escribiendo..." de la IA
+    // 2. Pintamos el indicador de "Escribiendo..."
     var typingId = 'typing-' + Date.now();
     var typingHTML = `
         <div class="chat-msg ai" id="${typingId}">
@@ -52,7 +88,6 @@ function sendChatbotMessage() {
     messagesContainer.insertAdjacentHTML('beforeend', typingHTML);
     scrollToBottomChat();
 
-    // 3. AQUÍ ES DONDE LLAMAMOS A TU BACKEND (QUE CONECTARÁ CON n8n)
     var formData = new FormData();
     formData.append('prompt', messageText);
 
@@ -62,7 +97,6 @@ function sendChatbotMessage() {
     })
         .then(async response => {
             if (!response.ok) {
-                // 🔥 AQUÍ LEEMOS EL ERROR REAL DE C# 🔥
                 var errorMensaje = await response.text();
                 throw new Error(errorMensaje);
             }
@@ -74,36 +108,36 @@ function sendChatbotMessage() {
             var aiMsgHTML = `<div class="chat-msg ai">${data.respuesta}</div>`;
             messagesContainer.insertAdjacentHTML('beforeend', aiMsgHTML);
 
+            // --- GUARDAMOS AQUÍ (Respuesta de la IA registrada) ---
+            guardarHistorialChat();
+
             scrollToBottomChat();
             sendBtn.disabled = false;
 
-            // 🔥 TRUCO: Si la respuesta de la IA sugiere que ha creado algo, recargamos
-            // Puedes ajustar estas palabras clave según cómo responda tu agente
-            const palabrasClave = ["creado", "tabla", "lista", "finalizado", "columna"];
-            const mensajeLow = data.respuesta.toLowerCase();
-
-            if (palabrasClave.some(p => mensajeLow.includes(p))) {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000); // Esperamos 2 segundos para que el usuario pueda leer el mensaje de éxito
+            const palabrasClave = ["creado", "tabla", "añadida", "lista"];
+            if (palabrasClave.some(p => data.respuesta.toLowerCase().includes(p))) {
+                refrescarMenuLateral();
             }
 
             input.focus();
         })
         .catch(error => {
-            document.getElementById(typingId).remove();
+            // Si el elemento de typing existe aún, lo quitamos
+            const tNode = document.getElementById(typingId);
+            if (tNode) tNode.remove();
 
-            // 🔥 AHORA EL CHAT MOSTRARÁ EL ERROR EXACTO DEL SERVIDOR 🔥
             var errorHTML = `<div class="chat-msg ai" style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;">
-            ⚠️ <b>Error:</b> ${error.message}
-        </div>`;
+                ⚠️ <b>Error:</b> ${error.message}
+            </div>`;
             messagesContainer.insertAdjacentHTML('beforeend', errorHTML);
+
+            // --- GUARDAMOS AQUÍ (Incluso el error se guarda para que el usuario sepa qué pasó) ---
+            guardarHistorialChat();
 
             scrollToBottomChat();
             sendBtn.disabled = false;
         });
 }
-
 // Función auxiliar para que el chat baje automáticamente al último mensaje
 function scrollToBottomChat() {
     var messagesContainer = document.getElementById('chatbot-messages');
