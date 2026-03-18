@@ -145,6 +145,7 @@ function getFilasABorrar(nombreTabla) {
         title: '¿Eliminar registros?',
         text: `Vas a eliminar ${idsPendientesDeBorrar.length} registro(s). Esta acción no se puede deshacer.`,
         icon: 'warning',
+        heightAuto: false,
         showCancelButton: true,
         confirmButtonColor: '#dc2626', 
         cancelButtonColor: '#64748b', 

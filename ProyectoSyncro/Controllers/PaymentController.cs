@@ -22,7 +22,8 @@ namespace ProyectoSyncro.Controllers
         [HttpGet]
         public async  Task<IActionResult> Checkout()
         {
-            var domain = "https://localhost:7100"; 
+            var request = HttpContext.Request;
+            var domain = $"{request.Scheme}://{request.Host}";
 
             string idEmpresa = HttpContext.User.FindFirst("IdEmpresa").Value;
             string emailUsuario = HttpContext.User.FindFirst("Email")?.Value;
