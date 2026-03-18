@@ -233,6 +233,7 @@ function deleteRegistro(nombreTabla, idFila) {
         if (result.isConfirmed) {
             Swal.fire({
                 title: '¡Eliminado!',
+                heightAuto: false,
                 text: 'Los registros han sido borrados.',
                 icon: 'success',
                 timer: 1500, 
