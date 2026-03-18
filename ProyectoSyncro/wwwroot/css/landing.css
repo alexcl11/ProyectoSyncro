@@ -156,15 +156,15 @@ p {
     display: none;
     width: 38px;
     height: 38px;
-    border: 1px solid var(--border); /* O 'border: none;' si lo prefieres limpio */
+    border: 1px solid var(--border);
     border-radius: 10px;
     background: #fff;
     align-items: center;
     justify-content: center;
-    flex-direction: column; /* Añade esto para que las líneas se apilen */
-    gap: 5px; /* Separación entre líneas */
+    flex-direction: column;
+    gap: 5px;
     cursor: pointer;
-    z-index: 51; /* Para que quede por encima del menú desplegable */
+    z-index: 51;
 }
 
     .nav-toggle span {
@@ -172,13 +172,13 @@ p {
         width: 18px;
         height: 2px;
         background: var(--ink);
-        transition: all 0.3s ease; /* Transición suave */
+        transition: all 0.3s ease;
     }
 
 .nav-mobile {
     display: none;
     position: absolute;
-    top: 100%; /* Se coloca justo debajo de la barra de navegación */
+    top: 100%;
     left: 0;
     width: 100%;
     background: rgba(255, 255, 255, 0.95);
@@ -186,7 +186,6 @@ p {
     border-bottom: 1px solid var(--border);
     padding: 20px 0 24px;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
-    /* Permitimos scroll si la pantalla es muy pequeña */
     max-height: calc(100vh - 70px);
     overflow-y: auto;
 }
@@ -227,20 +226,20 @@ p {
 }
 
 .blob-one {
-    background: #d4e3f5; /* Azul muy clarito */
+    background: #d4e3f5;
     top: 40px;
     left: 6%;
 }
 
 .blob-two {
-    background: #d7f0ea; /* Turquesa muy clarito */
+    background: #d7f0ea;
     top: 40px;
     right: 6%;
     animation-delay: 2s;
 }
 
 .blob-three {
-    background: #e2e8f0; /* Gris azulado neutro */
+    background: #e2e8f0;
     bottom: -60px;
     left: 30%;
     animation-delay: 4s;
@@ -297,7 +296,6 @@ p {
 }
 
 .gradient-text {
-    /* Hacemos un degradado desde el azul al turquesa */
     background: linear-gradient(90deg, var(--brand), var(--accent));
     -webkit-background-clip: text;
     color: transparent;
@@ -488,6 +486,37 @@ p {
     animation-delay: 1.5s;
 }
 
+/* NUEVA TARJETA FLOTANTE PARA EL CHAT DE IA */
+.float-ai {
+    top: -40px;
+    left: -2%;
+    width: 280px;
+    animation-delay: 0.5s;
+    z-index: 10;
+}
+
+.ai-msg-user {
+    background: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 2px;
+    font-size: 0.75rem;
+    margin-bottom: 10px;
+    color: var(--ink);
+    border: 1px solid #e2e8f0;
+}
+
+.ai-msg-bot {
+    background: #eef2ff;
+    padding: 10px 14px;
+    border-radius: 12px 12px 2px 12px;
+    font-size: 0.75rem;
+    color: var(--brand);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 @keyframes float {
     0%, 100% {
         transform: translateY(0);
@@ -598,7 +627,7 @@ p {
 
 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 24px;
 }
 
@@ -651,6 +680,16 @@ p {
     .feature-icon.purple {
         background: #ede9fe;
         color: #7c3aed;
+    }
+
+    .feature-icon.gold {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    /* Para IA */
+    .feature-icon.rose {
+        background: #ffe4e6;
+        color: #e11d48;
     }
 
 .how {
@@ -1004,14 +1043,6 @@ p {
     background: #22c55e;
 }
 
-.link-button {
-    background: transparent;
-    border: none;
-    color: var(--brand);
-    font-weight: 700;
-    cursor: pointer;
-}
-
 .panel-mockup .mockup-browser {
     transform: translateY(6px);
 }
@@ -1091,9 +1122,9 @@ p {
 .cta-bg {
     position: absolute;
     inset: 0;
-    /* Brillo azul a la derecha y turquesa a la izquierda */
     background: radial-gradient(circle at top right, rgba(36, 84, 147, 0.35), transparent 55%), radial-gradient(circle at bottom left, rgba(54, 178, 151, 0.25), transparent 60%);
 }
+
 .cta-inner {
     position: relative;
     text-align: center;
@@ -1147,8 +1178,7 @@ p {
 }
 
 @media (max-width: 960px) {
-    .nav-links,
-    .nav-cta {
+    .nav-links, .nav-cta {
         display: none;
     }
 
@@ -1160,8 +1190,7 @@ p {
         padding-top: 130px;
     }
 
-    .float-right,
-    .float-left {
+    .float-right, .float-left, .float-ai {
         display: none;
     }
 }

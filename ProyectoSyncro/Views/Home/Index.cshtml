@@ -22,7 +22,6 @@
                 <div class="container nav-inner">
                     <a class="brand" href="#top">
                         <img src="~/img/logo.png" alt="Logo Syncro" style="height: 50px; width: auto;" />
-                        
                     </a>
                     <div class="nav-links">
                         <a href="#features">Caracteristicas</a>
@@ -63,16 +62,16 @@
                 </div>
                 <div class="container hero-content">
                     <div class="hero-topline">
-                        <span class="dot"></span>
-                        Nuevo: Relaciones Inteligentes 2.0
+                        <span class="dot" style="background: #22c55e;"></span>
+                        Nuevo: Agente de Inteligencia Artificial Integrado
                     </div>
                     <h1>
                         Tu negocio no es estandar.<br />
                         <span class="gradient-text">Tu software tampoco.</span>
                     </h1>
                     <p>
-                        Construye tu propio CRM, gestor de proyectos o base de datos en minutos.
-                        Sin codigo, sin limites y adaptado exactamente a tu forma de trabajar.
+                        Construye tu propio CRM o gestor de proyectos conversando.
+                        Pídele a nuestra IA que cree tus tablas e inserte tus datos, o hazlo tú mismo sin código.
                     </p>
                     <div class="hero-actions">
                         <a asp-controller="Auth" asp-action="Register" class="btn btn-primary btn-lg">
@@ -153,6 +152,22 @@
                             </div>
                         </div>
 
+                        <div class="float-card float-ai">
+                            <div class="card-header">
+                                <div class="avatar" style="background: var(--brand); color: #fff;">IA</div>
+                                <div>
+                                    <div class="card-title">Syncro AI</div>
+                                    <div class="card-sub">Conectado a tu base de datos</div>
+                                </div>
+                            </div>
+                            <div class="ai-msg-user">
+                                "Créame una tabla de Clientes VIP y asígnales estas 3 tareas de reforma..."
+                            </div>
+                            <div class="ai-msg-bot">
+                                <span>✨</span> ¡Hecho! He creado las relaciones y guardado los registros.
+                            </div>
+                        </div>
+
                         <div class="float-card float-right">
                             <div class="card-header">
                                 <div class="avatar">JL</div>
@@ -185,13 +200,11 @@
                 </div>
             </section>
 
-            
-
             <section class="features" id="features">
                 <div class="container">
                     <h2>Todo lo que necesitas para organizar tu negocio</h2>
                     <p class="section-lead">
-                        La potencia de una base de datos relacional con la simplicidad de una hoja de calculo.
+                        La potencia de una base de datos relacional con la simplicidad de una conversación.
                     </p>
                     <div class="feature-grid">
                         <article class="feature-card">
@@ -204,10 +217,19 @@
                                 </svg>
                             </div>
                             <h3>Tablas 100% flexibles</h3>
-                            <p>
-                                Anade columnas de texto, numeros, fechas o listas desplegables. Si tu proceso cambia manana, tu base de datos tambien.
-                            </p>
+                            <p>Anade columnas de texto, numeros, fechas o listas desplegables. Si tu proceso cambia manana, tu base de datos tambien.</p>
                         </article>
+
+                        <article class="feature-card">
+                            <div class="feature-icon gold">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" stroke-width="2" stroke-linejoin="round"></path>
+                                </svg>
+                            </div>
+                            <h3>Agente Inteligente Integrado</h3>
+                            <p>Olvida los clics. Pídele a nuestra IA que genere la estructura de tu empresa y cruce los datos de forma automática e invisible.</p>
+                        </article>
+
                         <article class="feature-card">
                             <div class="feature-icon indigo">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -217,10 +239,21 @@
                                 </svg>
                             </div>
                             <h3>Relaciona tus datos</h3>
-                            <p>
-                                Vincula tareas con clientes, o facturas con proyectos. Adios a la informacion duplicada y a los Excels desincronizados.
-                            </p>
+                            <p>Vincula tareas con clientes, o facturas con proyectos. Adios a la informacion duplicada y a los Excels desincronizados.</p>
                         </article>
+
+                        <article class="feature-card">
+                            <div class="feature-icon rose">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </div>
+                            <h3>Insercion Masiva Asistida</h3>
+                            <p>¿Tienes un listado enorme? Pégaselo al bot en lenguaje natural y él se encargará de crear los registros uno a uno por detrás.</p>
+                        </article>
+
                         <article class="feature-card">
                             <div class="feature-icon green">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -229,10 +262,9 @@
                                 </svg>
                             </div>
                             <h3>Espacios aislados y seguros</h3>
-                            <p>
-                                Tu informacion vive en un entorno privado exclusivo para tu empresa. Seguridad de nivel empresarial desde el dia uno.
-                            </p>
+                            <p>Tu informacion vive en un entorno privado exclusivo para tu empresa. Seguridad de nivel empresarial desde el dia uno.</p>
                         </article>
+
                         <article class="feature-card">
                             <div class="feature-icon purple">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -243,9 +275,7 @@
                                 </svg>
                             </div>
                             <h3>Trabajo en equipo</h3>
-                            <p>
-                                Invita a tus empleados, asigna roles de Administrador o Usuario y colaborad en tiempo real sobre los mismos datos.
-                            </p>
+                            <p>Invita a tus empleados, asigna roles de Administrador o Usuario y colaborad en tiempo real sobre los mismos datos.</p>
                         </article>
                     </div>
                 </div>
@@ -261,24 +291,25 @@
                     <div class="step">
                         <div class="step-text">
                             <span class="step-index">1</span>
-                            <h3>Crea tu estructura en segundos</h3>
-                            <p>Olvida los desarrollos caros. Escribe el nombre de tu tabla, anade las columnas que necesitas y listo.</p>
+                            <h3>Crea tu estructura conversando</h3>
+                            <p>Dile adiós a los manuales. Explícale a la IA cómo es tu negocio y ella creará las columnas y tipos de datos necesarios. (O hazlo a mano si lo prefieres).</p>
                         </div>
                         <div class="step-visual">
                             <div class="visual-card">
                                 <div class="modal">
                                     <div class="modal-head">
-                                        <span>Nueva Columna</span>
+                                        <span>Nueva Columna (IA)</span>
                                         <span>✕</span>
                                     </div>
                                     <div class="modal-body">
-                                        <label>Nombre</label>
-                                        <div class="input">Estado del Proyecto</div>
-                                        <label>Tipo</label>
-                                        <div class="input select">Relacion <span>▼</span></div>
-                                        <button class="btn btn-primary">Crear Columna</button>
+                                        <div class="ai-msg-user" style="margin-top: 5px;">
+                                            "Añade un campo de Estado con opciones: Pendiente y Terminado"
+                                        </div>
+                                        <div class="input select" style="border-color: #22c55e; color: #15803d; font-weight: 600;">
+                                            Generando Select... <span style="font-size: 1rem;">✨</span>
+                                        </div>
                                     </div>
-                                    <div class="tooltip">Click!</div>
+                                    <div class="tooltip" style="background: var(--brand);">¡Magia en directo!</div>
                                 </div>
                             </div>
                         </div>
@@ -628,8 +659,8 @@
                                 <li>Vistas de Tabla y Calendario</li>
                                 <li>Soporte por email</li>
                             </ul>
-                            <a asp-controller="Auth" asp-action="Register" 
-                            class="btn btn-outline">
+                            <a asp-controller="Auth" asp-action="Register"
+                               class="btn btn-outline">
                                 Empezar gratis
                             </a>
                         </article>
@@ -640,8 +671,8 @@
                             <p class="price-desc">Para equipos que necesitan potencia ilimitada.</p>
                             <div class="price">9.99 €<span>/mes</span></div>
                             <ul>
-                                <li>Registros ilimitados</li>
-                                <li>Tablas ilimitados</li>
+                                <li>Agente de Inteligencia Artificial</li>
+                                <li>Tablas y Registros ilimitados</li>
                                 <li>Usuarios ilimitados</li>
                                 <li>Soporte prioritario 24/7</li>
                             </ul>
@@ -662,8 +693,8 @@
                         Unete a las empresas que ya han dejado atras las hojas de calculo.
                         Sin tarjeta de credito requerida.
                     </p>
-                    <a asp-controller="Auth" asp-action="Register" 
-                    class="btn btn-light btn-lg">
+                    <a asp-controller="Auth" asp-action="Register"
+                       class="btn btn-light btn-lg">
                         Empezar ahora gratis
                     </a>
                 </div>
@@ -678,7 +709,7 @@
                     </a>
                     <p>
                         La plataforma flexible para construir las herramientas que tu negocio necesita.
-                        Sin codigo, sin complicaciones.
+                        Conectada, inteligente y sin complicaciones.
                     </p>
                 </div>
                 <div>
@@ -708,12 +739,8 @@
 
             if (toggleBtn && mobileMenu) {
                 toggleBtn.addEventListener('click', function (e) {
-                    e.preventDefault(); // Evitamos comportamientos raros
-
-                    // Alternamos la clase "open"
+                    e.preventDefault();
                     const isOpen = mobileMenu.classList.toggle('open');
-
-                    // Actualizamos el atributo para accesibilidad
                     toggleBtn.setAttribute('aria-expanded', isOpen);
                 });
             }
@@ -726,11 +753,9 @@
                 button.addEventListener('click', () => {
                     const target = button.getAttribute('data-tab-button');
 
-                    // Quitamos la clase activa de todos los botones y paneles
                     tabButtons.forEach(btn => btn.classList.remove('active'));
                     tabPanels.forEach(panel => panel.classList.remove('active'));
 
-                    // Añadimos la clase activa al botón pulsado y a su panel correspondiente
                     button.classList.add('active');
                     const activePanel = document.querySelector(`.tab-panel[data-tab-panel="${target}"]`);
                     if (activePanel) {
@@ -742,4 +767,3 @@
     </script>
 </body>
 </html>
-
