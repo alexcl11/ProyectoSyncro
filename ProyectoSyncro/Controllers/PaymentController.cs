@@ -23,7 +23,9 @@ namespace ProyectoSyncro.Controllers
         public async  Task<IActionResult> Checkout()
         {
             var request = HttpContext.Request;
-            var domain = $"{request.Scheme}://{request.Host}";
+            var host = request.Headers["X-Forwarded-Host"].FirstOrDefault() ?? request.Host.Value;
+            var scheme = request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? request.Scheme;
+            var domain = $"{scheme}://{host}";
 
             string idEmpresa = HttpContext.User.FindFirst("IdEmpresa").Value;
             string emailUsuario = HttpContext.User.FindFirst("Email")?.Value;
@@ -76,7 +78,7 @@ namespace ProyectoSyncro.Controllers
 
             return View();
         }
-
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Success(string session_id)
         {
