@@ -1,11 +1,11 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using ProyectoSyncro.Data;
-using ProyectoSyncro.Helpers;
+using ProyectoSyncro.Api.Data;
+using ProyectoSyncro.Api.Helpers;
 using ProyectoSyncro.Models;
 using System.Data;
 
-namespace ProyectoSyncro.Repositories
+namespace ProyectoSyncro.Api.Repositories
 {
     public class AuthRepository
     {

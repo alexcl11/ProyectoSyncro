@@ -1,145 +1,104 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using ProyectoSyncro.Models;
-using ProyectoSyncro.Repositories;
+using ProyectoSyncro.Services;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ProyectoSyncro.Controllers
+{
+    public class AuthController : Controller
     {
-        public class AuthController : Controller
+        private readonly AuthApiService _authService;
+
+        public AuthController(AuthApiService authService)
         {
-            private AuthRepository repo;
+            _authService = authService;
+        }
 
-            public AuthController(AuthRepository repo)
+        public IActionResult Register(string plan = "free")
+        {
+            ViewData["PLANSELECCIONADO"] = plan;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(string plan, string nombreEmpresa, string cif, string nombreAdmin, string email, string password)
+        {
+            // Pedimos a la API que registre al usuario
+            bool registrado = await _authService.RegisterAsync(cif, nombreEmpresa, nombreAdmin, email, password);
+
+            if (registrado)
             {
-                this.repo = repo;
-            }
+                //hacemos login automático
+                string token = await _authService.LoginAsync(email, password);
 
-            public IActionResult Register(string plan = "free")
-            {
-                ViewData["PLANSELECCIONADO"] = plan;
-                return View();
-            }
-
-            [HttpPost]
-            public async Task<IActionResult> Register(string plan, string nombreEmpresa, string cif, string nombreAdmin, string email, string password)
-            {
-
-                await this.repo.RegisterEmpresaUserAsync(cif, nombreEmpresa, nombreAdmin, email, password);
-
-
-
-                UserSession nuevoUsuario = await this.repo.LoginUserAsync(email, password);
-
-
-                if (nuevoUsuario != null)
+                if (token != null)
                 {
-                    ClaimsIdentity identity = new ClaimsIdentity(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        ClaimTypes.Name,
-                        ClaimTypes.Role);
+                    HttpContext.Session.SetString("TOKEN", token);
 
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwt = handler.ReadJwtToken(token);
+                    var identity = new ClaimsIdentity(jwt.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-                    identity.AddClaim(new Claim(ClaimTypes.Name, nuevoUsuario.Nombre ?? ""));
-                    identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, nuevoUsuario.IdUsuario.ToString()));
-                    identity.AddClaim(new Claim("IdEmpresa", nuevoUsuario.IdEmpresa.ToString()));
-
-
-                    identity.AddClaim(new Claim(ClaimTypes.Role, "Admin"));
-
-                    identity.AddClaim(new Claim("Email", nuevoUsuario.Email ?? email));
-                    identity.AddClaim(new Claim("NombreEmpresa", nuevoUsuario.NombreEmpresa ?? ""));
-                    identity.AddClaim(new Claim("Plan", "Free"));
-
-                    ClaimsPrincipal userPrincipal = new ClaimsPrincipal(identity);
-
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        userPrincipal,
-                        new AuthenticationProperties
-                        {
-                            IsPersistent = true,
-                            ExpiresUtc = DateTime.UtcNow.AddHours(8)
-                        });
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTime.UtcNow.AddHours(8) });
 
                     if (plan == "premium")
                     {
-                        // Le mandamos a pagar
                         return RedirectToAction("Checkout", "Payment");
                     }
-                    else
-                    {
-                        // Le mandamos al panel normal
-                        return RedirectToAction("Index", "Dashboard");
-                    }
-            }
-                else
-                {
-                    ViewData["MENSAJE"] = "Hubo un error al registrar la empresa.";
-                    return View();
-                }
-            }
-
-            public IActionResult Login(string? mensaje)
-            {
-            ViewData["MENSAJE"] = mensaje;
-                return View();
-            }
-
-            [HttpPost]
-            public async Task<IActionResult> Login(string email, string password)
-            {
-                UserSession usuario = await this.repo.LoginUserAsync(email, password);
-
-                if (usuario != null)
-                {
-                    ClaimsIdentity identity = new ClaimsIdentity(
-                            CookieAuthenticationDefaults.AuthenticationScheme,
-                            ClaimTypes.Name,
-                            ClaimTypes.Role
-                        );
-
-                    identity.AddClaim(new Claim(ClaimTypes.Name, usuario.Nombre ?? ""));
-                    identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, usuario.IdUsuario.ToString()));
-                    identity.AddClaim(new Claim("IdEmpresa", usuario.IdEmpresa.ToString()));
-
-                    string roleUser = usuario.Admin ? "Admin" : "Estandar";
-                    identity.AddClaim(new Claim(ClaimTypes.Role, roleUser));
-
-                    identity.AddClaim(new Claim("Email", usuario.Email ?? email));
-                    identity.AddClaim(new Claim("NombreEmpresa", usuario.NombreEmpresa ?? ""));
-                    string planEmpresa = usuario.IsPremium ? "Premium" : "Free";
-                    identity.AddClaim(new Claim("Plan", planEmpresa));
-
-                    ClaimsPrincipal principal = new ClaimsPrincipal(identity);
-
-                    await HttpContext.SignInAsync(
-                            CookieAuthenticationDefaults.AuthenticationScheme,
-                            principal,
-                            new AuthenticationProperties
-                            {
-                                IsPersistent = true,
-                                ExpiresUtc = DateTime.UtcNow.AddHours(8)
-                            }
-                        );
-
                     return RedirectToAction("Index", "Dashboard");
                 }
-                else
-                {
-                    TempData["InvalidCredentials"] = "Credenciales incorrectas";
-                }
-                return View();
             }
+
+            ViewData["MENSAJE"] = "Hubo un error al registrar la empresa. Es posible que el CIF o Email ya existan.";
+            return View();
+        }
+
+        public IActionResult Login(string? mensaje)
+        {
+            ViewData["MENSAJE"] = mensaje;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Login(string email, string password)
+        {
+            // Llamamos a nuestra API para conseguir el Token JWT
+            string token = await _authService.LoginAsync(email, password);
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                // Guardamos el token en la sesión para que los demás servicios puedan usarlo
+                HttpContext.Session.SetString("TOKEN", token);
+
+                // extraemos los Claims del JWT para crear la Identidad en el MVC
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+
+                var identity = new ClaimsIdentity(jwt.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTime.UtcNow.AddHours(8)
+                });
+
+                return RedirectToAction("Index", "Dashboard");
+            }
+            else
+            {
+                TempData["InvalidCredentials"] = "Credenciales incorrectas";
+            }
+            return View();
+        }
+
         public async Task<IActionResult> LogOut()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            HttpContext.Session.Clear();
-
+            HttpContext.Session.Clear(); // Limpiamos el Token
             return RedirectToAction("Login", "Auth");
         }
-    } 
+    }
 }

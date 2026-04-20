@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="ProyectoSyncro.Api/ProyectoSyncro.Api.csproj" Id="b675c609-1104-4b7b-9614-513ac4a2a853" />
+  <Project Path="ProyectoSyncro.Models/ProyectoSyncro.Models.csproj" Id="6cf1a664-403d-4212-8425-514506dd4753" />
   <Project Path="ProyectoSyncro/ProyectoSyncro.csproj" />
 </Solution>

@@ -1,20 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using ProyectoSyncro.Models;
-using ProyectoSyncro.Repositories;
-using System.Security.Claims;
+using ProyectoSyncro.Services;
 
 namespace ProyectoSyncro.Controllers
 {
     [Authorize]
     public class DashboardController : BaseController
     {
-        private BaseRepository repo;
-
-        public DashboardController(BaseRepository repo) : base(repo)
+        public DashboardController(BaseApiService baseService) : base(baseService)
         {
-            this.repo = repo;
         }
 
         [HttpGet]
@@ -23,23 +17,19 @@ namespace ProyectoSyncro.Controllers
             string sortCol = "Id", string sortDir = "DESC",
             string filterCol = null, string filterOp = null, string filterVal = null)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
             string nombreUser = HttpContext.User.Identity.Name;
-            string plan = HttpContext.User.FindFirst("Plan").Value;
+            string plan = HttpContext.User.FindFirst("Plan")?.Value;
 
-            ViewData["esPremium"] = plan == "Free" ? false : true;
+            ViewData["esPremium"] = plan != "Free";
 
-
-            List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+            List<string> tablas = await _baseService.GetTablasAsync();
 
             if (tabla != null && tablas.Contains(tabla))
             {
-                List<Dictionary<string, object>> datos =
-                    await this.repo.GetDatosTablaEmpresaAsync(idEmpresa, tabla, sortCol, sortDir, filterCol, filterOp, filterVal);
-
-                var columnas = await this.repo.GetColumnasTablaAsync(idEmpresa, tabla);
-                var opciones = await this.repo.GetOpcionesSelectTablaEmpresaAsync(idEmpresa, tabla);
-                var relaciones = await this.repo.GetOpcionesRelacionTablaEmpresaAsync(idEmpresa, tabla);
+                var datos = await _baseService.GetDatosTablaAsync(tabla, sortCol, sortDir, filterCol, filterOp, filterVal);
+                var columnas = await _baseService.GetColumnasTablaAsync(tabla);
+                var opciones = await _baseService.GetOpcionesSelectAsync(tabla);
+                var relaciones = await _baseService.GetOpcionesRelacionAsync(tabla);
 
                 ViewData["NombreUser"] = nombreUser;
                 ViewData["TablasEmpresa"] = tablas;
@@ -50,27 +40,20 @@ namespace ProyectoSyncro.Controllers
 
                 ViewData["SortCol"] = sortCol;
                 ViewData["SortDir"] = sortDir;
-
                 ViewData["FilterCol"] = filterCol;
                 ViewData["FilterOp"] = filterOp;
                 ViewData["FilterVal"] = filterVal;
 
                 return View(datos);
             }
-            else
-            {
-                return View();
-            }
+            return View();
         }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> CreateColumn
-            (string nombreTabla, string nombreColumna, string tipoDato, string? nombreTablaRelacionada,
-            List<string> opcionesValor, List<string> opcionesColor)
+        public async Task<IActionResult> CreateColumn(string nombreTabla, string nombreColumna, string tipoDato, string? nombreTablaRelacionada, List<string> opcionesValor, List<string> opcionesColor)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-
-            await this.repo.CreateColumnaTablaAsync(idEmpresa, nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
+            await _baseService.CreateColumnaAsync(nombreTabla, nombreColumna, tipoDato, nombreTablaRelacionada);
 
             if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
             {
@@ -80,175 +63,97 @@ namespace ProyectoSyncro.Controllers
                     if (!string.IsNullOrWhiteSpace(valor))
                     {
                         string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
-                        await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreColumna, valor, color);
+                        await _baseService.InsertarOpcionColumnaAsync(nombreTabla, nombreColumna, valor, color);
                     }
                 }
             }
-
             return RedirectToAction("Index", new { tabla = nombreTabla });
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateRegistro(string nombreTabla, Dictionary<string, string> valoresRegistro)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-
-            await this.repo.InsertRegistroTablaEmpresaAsync(idEmpresa, nombreTabla, valoresRegistro);
+            await _baseService.InsertRegistroAsync(nombreTabla, valoresRegistro);
             return RedirectToAction("Index", new { tabla = nombreTabla });
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateCelda(string nombreTabla, int idFila, string columna, string valor)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-
-            try
-            {
-                await this.repo.UpdateCeldaAsync(idEmpresa, nombreTabla, idFila, columna, valor);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _baseService.UpdateCeldaAsync(nombreTabla, idFila, columna, valor);
+            return Ok();
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteRegistros(string nombreTabla, List<int> idsFilas)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            try
-            {
-                if (idsFilas != null && idsFilas.Any())
-                {
-                    await this.repo.DeleteRegistrosAsync(idEmpresa, nombreTabla, idsFilas);
-                }
-                return Ok();
-            }
-            catch (SqlException ex) when (ex.Number == 547)
-            {
-                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
-            }
+            if (idsFilas != null && idsFilas.Any())
+                await _baseService.DeleteRegistrosMultipleAsync(nombreTabla, idsFilas);
+            return Ok();
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteRegistro(string nombreTabla, int idFila)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            try
-            {
-                await this.repo.DeleteRegistroAsync(idEmpresa, nombreTabla, idFila);
-                return Ok();
-            }
-            catch (SqlException ex) when (ex.Number == 547)
-            {
-                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
-            }
+            await _baseService.DeleteRegistroAsync(nombreTabla, idFila);
+            return Ok();
         }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteTablasEmpresa(List<string> nombresTablas)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            try
+            if (nombresTablas != null && nombresTablas.Any())
             {
-                if (nombresTablas != null && nombresTablas.Any())
+                foreach (string tabla in nombresTablas)
                 {
-                    foreach (string tabla in nombresTablas)
-                    {
-                        await this.repo.DeleteTablasEmpresaAsync(idEmpresa, tabla);
-                    }
+                    await _baseService.DeleteTablaAsync(tabla);
                 }
-                return Ok();
             }
-            catch (SqlException ex) when (ex.Number == 547 || ex.Number == 3726)
-            {
-                return BadRequest("No se puede eliminar porque algunos de estos registros están siendo usados en otras tablas.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Ocurrió un error al intentar eliminar los datos.");
-            }
+            return Ok();
         }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteColumna(string nombreTabla, string nombreColumna)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            try
-            {
-                await this.repo.DeleteColumnaAsync(idEmpresa, nombreTabla, nombreColumna);
-                return Ok();
-            }
-            catch (SqlException ex) when (ex.Number == 5074)
-            {
-                return BadRequest("No se puede eliminar esta columna porque está atada a una restricción o relación de la base de datos.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Ocurrió un error al intentar eliminar la columna.");
-            }
+            await _baseService.DeleteColumnaAsync(nombreTabla, nombreColumna);
+            return Ok();
         }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> RenameTabla(string nombreOld, string nombreNew)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            try
-            {
-                await this.repo.RenameTablaAsync(idEmpresa, nombreOld, nombreNew);
-                return Ok(new { url = $"/Dashboard/Index?tabla={nombreNew}" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("No se pudo renombrar la tabla. Es posible que el nombre ya exista.");
-            }
+            await _baseService.RenameTablaAsync(nombreOld, nombreNew);
+            return Ok(new { url = $"/Dashboard/Index?tabla={nombreNew}" });
         }
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<IActionResult> RenameColumna(
-            string nombreTabla, string nombreOld, string nombreNew, string tipoDato,
-            string? nombreTablaRelacionada, List<string> opcionesValor, List<string> opcionesColor)
+        public async Task<IActionResult> RenameColumna(string nombreTabla, string nombreOld, string nombreNew, string tipoDato, string? nombreTablaRelacionada, List<string> opcionesValor, List<string> opcionesColor)
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            try
-            {
-                await this.repo.RenameColumnaAsync(idEmpresa, nombreTabla, nombreOld, nombreNew, tipoDato, nombreTablaRelacionada);
+            await _baseService.RenameColumnaAsync(nombreTabla, nombreOld, nombreNew, tipoDato, nombreTablaRelacionada);
 
-                if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
+            if (tipoDato == "Select" && opcionesValor != null && opcionesValor.Count > 0)
+            {
+                for (int i = 0; i < opcionesValor.Count; i++)
                 {
-                    for (int i = 0; i < opcionesValor.Count; i++)
+                    string valor = opcionesValor[i];
+                    if (!string.IsNullOrWhiteSpace(valor))
                     {
-                        string valor = opcionesValor[i];
-                        if (!string.IsNullOrWhiteSpace(valor))
-                        {
-                            string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
-                            await this.repo.InsertarOpcionColumnaAsync(idEmpresa, nombreTabla, nombreNew, valor, color);
-                        }
+                        string color = (opcionesColor != null && opcionesColor.Count > i) ? opcionesColor[i] : "#64748b";
+                        await _baseService.InsertarOpcionColumnaAsync(nombreTabla, nombreNew, valor, color);
                     }
                 }
-
-                return Ok();
             }
-            catch (Exception ex)
-            {
-                return BadRequest("No se pudo actualizar la columna. Es posible que el tipo de dato no sea compatible con los registros actuales (ej: intentar pasar letras a números).");
-            }
+            return Ok();
         }
 
         [HttpGet]
         public async Task<IActionResult> GetSoloTablas()
         {
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+            List<string> tablas = await _baseService.GetTablasAsync();
             return Json(tablas);
         }
     }

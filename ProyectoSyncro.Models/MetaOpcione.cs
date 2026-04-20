@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ProyectoSyncro.Models;
 
@@ -13,5 +14,6 @@ public partial class MetaOpcione
 
     public string? Color { get; set; }
 
+    [JsonIgnore]
     public virtual MetaColumna IdColumnaNavigation { get; set; } = null!;
 }

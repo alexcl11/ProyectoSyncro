@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http; // Necesario para IHttpContextAccessor
-using ProyectoSyncro.Repositories; // Cambia esto por tu namespace real
+using Microsoft.AspNetCore.Http;
+using ProyectoSyncro.Services; // 👈 Referencia a tus nuevos servicios
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -14,7 +14,6 @@ namespace ProyectoSyncro.Policies
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        
         public FreeTierTableLimitHandler(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
@@ -32,19 +31,17 @@ namespace ProyectoSyncro.Policies
                 return;
             }
 
-           
             var httpContext = _httpContextAccessor.HttpContext;
 
             if (httpContext != null)
             {
-                var repo = httpContext.RequestServices.GetService<BaseRepository>();
-                var claimIdEmpresa = context.User.FindFirst("IdEmpresa");
+                // 🔄 ¡AQUÍ ESTÁ EL CAMBIO! Pedimos el BaseApiService en lugar del Repository
+                var apiService = httpContext.RequestServices.GetService<BaseApiService>();
 
-                if (claimIdEmpresa != null && repo != null)
+                if (apiService != null)
                 {
-                    int idEmpresa = int.Parse(claimIdEmpresa.Value);
-
-                    var tablas = await repo.GetTablasEmpresaAsync(idEmpresa);
+                    // Llamamos a nuestra API en Azure para saber cuántas tablas tiene
+                    var tablas = await apiService.GetTablasAsync();
 
                     // Si es plan Free y tiene 0, 1, o 2 tablas, lo dejamos pasar
                     if (tablas.Count < 3)
@@ -53,7 +50,7 @@ namespace ProyectoSyncro.Policies
                     }
                     else
                     {
-                        // Si ya tiene 3 o más y no es Premium, le bloqueamos la acción
+                        // Si ya tiene 3 o más y no es Premium, le bloqueamos la acción en el MVC
                         context.Fail();
                     }
                 }

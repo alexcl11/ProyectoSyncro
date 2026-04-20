@@ -1,29 +1,25 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using ProyectoSyncro.Repositories;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using ProyectoSyncro.Services;
 using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
 {
-    // Etiqueta global: Todos los controladores que hereden de BaseController requerirán Login
     [Authorize]
     public class BaseController : Controller
     {
-        private readonly BaseRepository repo;
+        protected readonly BaseApiService _baseService;
 
-        public BaseController(BaseRepository repo)
+        public BaseController(BaseApiService baseService)
         {
-            this.repo = repo;
+            _baseService = baseService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(string nombreTabla)
         {
             var authService = HttpContext.RequestServices.GetService<IAuthorizationService>();
-
             var authResult = await authService.AuthorizeAsync(User, "LimitesFreeTablas");
 
             if (!authResult.Succeeded)
@@ -33,36 +29,31 @@ namespace ProyectoSyncro.Controllers
                 return RedirectToAction("Index", "Dashboard", new { tabla = tablaActual });
             }
 
-            int idEmpresa = int.Parse(HttpContext.User.FindFirst("IdEmpresa").Value);
-            await this.repo.CreateTablaEmpresaAsync(idEmpresa, nombreTabla);
-
+            // ¡Ya no pasamos el IdEmpresa! El servicio inyecta el token y la API se encarga
+            await _baseService.CreateTablaAsync(nombreTabla);
             return RedirectToAction("Index", "Dashboard", new { tabla = nombreTabla });
         }
 
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            // 2. En lugar de Session, comprobamos si la Identidad (Cookie) es válida
             if (context.HttpContext.User.Identity.IsAuthenticated)
             {
-                int idEmpresa = int.Parse(context.HttpContext.User.FindFirst("IdEmpresa").Value);
-                List<string> tablas = await this.repo.GetTablasEmpresaAsync(idEmpresa);
+                // Pedimos las tablas a la API para el menú lateral
+                this.ViewData["TablasEmpresa"] = await _baseService.GetTablasAsync();
 
-                // Como BaseController hereda de Controller, usamos this.ViewData directamente
-                this.ViewData["TablasEmpresa"] = tablas;
                 this.ViewData["NombreUser"] = context.HttpContext.User.Identity.Name;
-                this.ViewData["EsPremium"] = context.HttpContext.User.HasClaim("Plan", "Premium");                // Extraemos el nombre de la empresa del pasaporte
+                this.ViewData["EsPremium"] = context.HttpContext.User.HasClaim("Plan", "Premium");
+
                 var claimNombreEmpresa = context.HttpContext.User.FindFirst("NombreEmpresa");
                 if (claimNombreEmpresa != null)
                 {
                     this.ViewData["NombreEmpresa"] = claimNombreEmpresa.Value;
                 }
 
-                // Dejamos que la petición continúe su camino hacia el Dashboard o Settings
                 await next();
             }
             else
             {
-                // Si alguien llega hasta aquí sin estar logueado, lo expulsamos al Login
                 context.Result = new RedirectToActionResult("Login", "Auth", null);
             }
         }

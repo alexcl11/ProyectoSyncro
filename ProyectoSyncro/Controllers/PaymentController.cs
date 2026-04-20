@@ -2,25 +2,27 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSyncro.Models;
-using ProyectoSyncro.Repositories;
+using ProyectoSyncro.Services;
 using Stripe.Checkout;
-using System.Security.Claims;
 
 namespace ProyectoSyncro.Controllers
 {
     [Authorize]
     public class PaymentController : Controller
     {
-        private SettingsRepository repo;
-        private BaseRepository baseRepo;
-        public PaymentController(SettingsRepository repo, BaseRepository baseRepo)
+        private readonly SettingsApiService _settingsService;
+        private readonly BaseApiService _baseService;
+        private readonly IConfiguration _configuration;
+
+        public PaymentController(SettingsApiService settingsService, BaseApiService baseService, IConfiguration configuration)
         {
-            this.repo = repo;
-            this.baseRepo = baseRepo;
+            _settingsService = settingsService;
+            _baseService = baseService;
+            _configuration = configuration;
         }
 
         [HttpGet]
-        public async  Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout()
         {
             var request = HttpContext.Request;
             var host = request.Headers["X-Forwarded-Host"].FirstOrDefault() ?? request.Host.Value;
@@ -30,9 +32,9 @@ namespace ProyectoSyncro.Controllers
             string idEmpresa = HttpContext.User.FindFirst("IdEmpresa").Value;
             string emailUsuario = HttpContext.User.FindFirst("Email")?.Value;
 
-            Empresa empresa = await this.repo.GetEmpresaAsync(int.Parse(idEmpresa));
+            Empresa empresa = await _settingsService.GetEmpresaAsync();
 
-            ViewData["TablasEmpresa"] = await this.baseRepo.GetTablasEmpresaAsync(int.Parse(idEmpresa));
+            ViewData["TablasEmpresa"] = await _baseService.GetTablasAsync();
             ViewData["NombreUser"] = HttpContext.User.Identity.Name;
             ViewData["NombreEmpresa"] = empresa.NombreEmpresa;
 
@@ -49,13 +51,10 @@ namespace ProyectoSyncro.Controllers
                         {
                             UnitAmount = 999, // 9.99€
                             Currency = "eur",
-                
-                            // Le decimos que es recurrente cada mes
                             Recurring = new SessionLineItemPriceDataRecurringOptions
                             {
                                 Interval = "month",
                             },
-
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
                                 Name = "Plan Premium Mensual - Syncro",
@@ -65,19 +64,20 @@ namespace ProyectoSyncro.Controllers
                         Quantity = 1,
                     },
                 },
-                // Cambiamos a modo suscripción
                 Mode = "subscription",
                 ClientReferenceId = idEmpresa,
                 ReturnUrl = domain + "/Payment/Success?session_id={CHECKOUT_SESSION_ID}",
             };
+
             var service = new SessionService();
             Session session = service.Create(options);
 
             ViewBag.ClientSecret = session.ClientSecret;
-            ViewBag.PublicKey = "pk_test_51TASDdKG8fHbwgC1LrWG6Il8hlGN60tw80CxrmU2959IqvYlBTwiTLMfiyvWdFTuMLxcQvnBeezT4481wBkMtKSv00HzfYHEhB";
+            ViewBag.PublicKey = _configuration.GetSection("Stripe")["PublicKey"]; // Asegúrate de tener esto en appsettings
 
             return View();
         }
+
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Success(string session_id)
@@ -85,16 +85,14 @@ namespace ProyectoSyncro.Controllers
             var service = new SessionService();
             Session session = service.Get(session_id);
 
-            // Si el pago se ha cobrado correctamente
             if (session.PaymentStatus == "paid")
             {
-                int idEmpresa = int.Parse(session.ClientReferenceId);
+                // Avisamos a la API para que lo actualice en la Base de Datos
+                await _settingsService.ActivarPremiumAsync();
 
-                // Actualizamos la BD a Premium
-                await this.repo.UpdateEmpresaPremiumAsync(idEmpresa);
-
-                // Cerramos sesión para que al volver a entrar se refresquen sus permisos
+                // Cerramos sesión para forzar la recarga del Token y los permisos Premium
                 await HttpContext.SignOutAsync();
+                HttpContext.Session.Clear();
 
                 return RedirectToAction("Login", "Auth", new { mensaje = "¡Pago exitoso! Vuelve a iniciar sesión para disfrutar de Premium." });
             }

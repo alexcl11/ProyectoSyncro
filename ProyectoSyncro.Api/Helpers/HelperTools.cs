@@ -1,4 +1,4 @@
-﻿namespace ProyectoSyncro.Helpers
+﻿namespace ProyectoSyncro.Api.Helpers
 {
     public class HelperTools
     {

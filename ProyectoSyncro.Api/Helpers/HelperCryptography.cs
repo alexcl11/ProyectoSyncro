@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace ProyectoSyncro.Helpers
+namespace ProyectoSyncro.Api.Helpers
 {
     public class HelperCryptography
     {

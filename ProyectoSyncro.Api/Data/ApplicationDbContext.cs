@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using ProyectoSyncro.Models;
 
-namespace ProyectoSyncro.Data;
+namespace ProyectoSyncro.Api.Data;
 
 public partial class ApplicationDbContext : DbContext
 {

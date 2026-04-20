@@ -2,14 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Options;
-using ProyectoSyncro.Data;
+using ProyectoSyncro.Api.Data;
 using ProyectoSyncro.Models;
 using System.Data.Common;
 using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 
-namespace ProyectoSyncro.Repositories
+namespace ProyectoSyncro.Api.Repositories
 {
     public class BaseRepository
     {
