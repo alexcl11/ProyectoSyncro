@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSyncro.Models;
@@ -12,13 +13,12 @@ namespace ProyectoSyncro.Controllers
     {
         private readonly SettingsApiService _settingsService;
         private readonly BaseApiService _baseService;
-        private readonly IConfiguration _configuration;
-
-        public PaymentController(SettingsApiService settingsService, BaseApiService baseService, IConfiguration configuration)
+        private readonly SecretClient _secretClient;
+        public PaymentController(SettingsApiService settingsService, BaseApiService baseService, SecretClient secretClient)
         {
             _settingsService = settingsService;
             _baseService = baseService;
-            _configuration = configuration;
+            _secretClient = secretClient;
         }
 
         [HttpGet]
@@ -73,7 +73,9 @@ namespace ProyectoSyncro.Controllers
             Session session = service.Create(options);
 
             ViewBag.ClientSecret = session.ClientSecret;
-            ViewBag.PublicKey = _configuration.GetSection("Stripe")["PublicKey"]; // Asegúrate de tener esto en appsettings
+            KeyVaultSecret secretStripe = await _secretClient.GetSecretAsync("stripe-publickey");
+            string publicKeyStripe = secretStripe.Value;
+            ViewBag.PublicKey = publicKeyStripe;
 
             return View();
         }

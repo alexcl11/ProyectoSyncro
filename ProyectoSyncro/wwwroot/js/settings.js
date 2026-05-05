@@ -343,12 +343,15 @@ function cancelarPremium() {
                 .then(() => {
                     Swal.fire({
                         title: 'Suscripción cancelada',
-                        text: 'Has vuelto al plan Free de forma exitosa.',
+                        text: 'Has vuelto al plan Free de forma exitosa. Tu sesión se cerrará para aplicar los cambios.',
                         icon: 'success',
                         heightAuto: false,
-                        timer: 2000,
+                        timer: 2500,
                         showConfirmButton: false
-                    }).then(() => window.location.reload());
+                    }).then(() => {
+                        // Redirigir al logout para resetear la cookie y claims
+                        window.location.href = '/Auth/Logout';
+                    });
                 })
                 .catch(error => {
                     Swal.fire('Error', error.message, 'error');

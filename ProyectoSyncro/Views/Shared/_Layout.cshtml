@@ -169,7 +169,11 @@
                 
 
                 @{
-                    if (ViewData["Title"] != null && ViewData["Title"].ToString() != "Ajustes" && User.IsInRole("Admin"))
+                    if (ViewData["Title"] != null &&
+                        ViewData["Title"].ToString() != "Ajustes" &&
+                        ViewData["Title"].ToString() != "Conseguir Premium" &&
+                        ViewData["Title"].ToString() != "Checkout" &&
+                        User.IsInRole("Admin"))
                     {
                         <button type="button" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;" onclick="openColumnModal()">
                             <svg class="nav-icon" viewBox="0 0 24 24">

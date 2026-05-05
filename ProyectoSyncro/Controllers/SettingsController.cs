@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSyncro.Models;
@@ -12,12 +13,11 @@ namespace ProyectoSyncro.Controllers
     public class SettingsController : BaseController
     {
         private readonly SettingsApiService _settingsService;
-        private readonly IConfiguration _configuration;
-
-        public SettingsController(BaseApiService baseService, SettingsApiService settingsService, IConfiguration configuration) : base(baseService)
+        private SecretClient _secretClient;
+        public SettingsController(BaseApiService baseService, SettingsApiService settingsService, SecretClient secretClient) : base(baseService)
         {
             _settingsService = settingsService;
-            _configuration = configuration;
+            _secretClient = secretClient;
         }
 
         public async Task<IActionResult> Index()
@@ -119,7 +119,9 @@ namespace ProyectoSyncro.Controllers
                 string emailUsuario = HttpContext.User.FindFirst("Email")?.Value;
                 if (string.IsNullOrEmpty(emailUsuario)) return BadRequest("Email no encontrado.");
 
-                StripeConfiguration.ApiKey = _configuration.GetSection("Stripe")["SecretKey"];
+                KeyVaultSecret secretKeyStripe = await _secretClient.GetSecretAsync("stripe-secretkey");
+                string secretKey = secretKeyStripe.Value;
+                StripeConfiguration.ApiKey = secretKey;
 
                 var customerService = new CustomerService();
                 var customers = await customerService.ListAsync(new CustomerListOptions { Email = emailUsuario });
@@ -139,6 +141,7 @@ namespace ProyectoSyncro.Controllers
                     if (activeSubscription != null)
                     {
                         await subscriptionService.CancelAsync(activeSubscription.Id);
+
                     }
                 }
 

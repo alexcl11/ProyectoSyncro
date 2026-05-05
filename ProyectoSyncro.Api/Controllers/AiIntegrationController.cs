@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSyncro.Api.Repositories;
+using ProyectoSyncro.Models;
 
 namespace ProyectoSyncro.Api.Controllers
 {
@@ -12,11 +13,10 @@ namespace ProyectoSyncro.Api.Controllers
         private readonly BaseRepository _repo;
         private readonly string API_KEY;
 
-        public AiIntegrationController(BaseRepository repo, IConfiguration config)
+        public AiIntegrationController(BaseRepository repo, N8nConfig n8nConfig)
         {
-            _repo = repo;
-            // IMPORTANTE: Asegúrate de tener "N8nConfig:ApiKey" en tu appsettings.json de la API
-            API_KEY = config["N8nConfig:ApiKey"];
+            _repo = repo;            
+            API_KEY = n8nConfig.ApiKey;
         }
 
         // --- DTOs (Lo que nos manda n8n por POST) ---

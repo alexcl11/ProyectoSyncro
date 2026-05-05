@@ -1,10 +1,22 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Azure;
 using ProyectoSyncro.Policies;
 using ProyectoSyncro.Services;
 using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddAzureClients(factory =>
+{
+    factory.AddSecretClient(builder.Configuration.GetSection("KeyVault"));
+});
+string keyVaultUrl = builder.Configuration["KeyVault:VaultUri"]; // Asegúrate de que esta ruta coincida con tu appsettings.json
+SecretClient clienteSecreto = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
+
 
 // Extraemos la URL base de tu API en Azure
 var apiBaseUrl = new Uri(builder.Configuration["ApiConfig:BaseUrl"]);
@@ -35,7 +47,9 @@ builder.Services.AddSession(options => {
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 
-StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe")["SecretKey"];
+KeyVaultSecret stripeSecretKey = await clienteSecreto.GetSecretAsync("stripe-secretkey");
+string secretKeyStripe = stripeSecretKey.Value;
+StripeConfiguration.ApiKey = secretKeyStripe;
 
 var app = builder.Build();
 app.UseStaticFiles();

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ProyectoSyncro.Api.Repositories;
 using ProyectoSyncro.Models;
@@ -14,11 +15,13 @@ namespace ProyectoSyncro.Api.Controllers
     {
         private readonly AuthRepository _repo;
         private readonly IConfiguration _config;
+        private readonly SecretClient _secretClient;
 
-        public AuthController(AuthRepository repo, IConfiguration config)
+        public AuthController(AuthRepository repo, IConfiguration config, SecretClient secretClient)
         {
             _repo = repo;
             _config = config;
+            _secretClient = secretClient;
         }
 
         public class LoginRequest
@@ -51,7 +54,8 @@ namespace ProyectoSyncro.Api.Controllers
             };
 
             // 3. Firmamos el token con nuestra clave secreta
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            KeyVaultSecret jwtKeySecret = await _secretClient.GetSecretAsync("jwt-secretkey");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKeySecret.Value));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
