@@ -53,7 +53,7 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdatePerfil(string nombreUser, string email)
         {
-            int idUsuario = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            int idUsuario = int.Parse(HttpContext.User.FindFirst("IdUsuario")?.Value);
             bool esAdmin = HttpContext.User.IsInRole("Admin");
 
             await _settingsService.UpdateUserAsync(idUsuario, nombreUser, email, esAdmin);
@@ -92,7 +92,7 @@ namespace ProyectoSyncro.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteUsuarioEquipo(int idUsuario)
         {
-            int miIdUsuario = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            int miIdUsuario = int.Parse(HttpContext.User.FindFirst("IdUsuario")?.Value);
 
             if (miIdUsuario == idUsuario)
                 return BadRequest("No puedes eliminar tu propia cuenta de administrador.");
