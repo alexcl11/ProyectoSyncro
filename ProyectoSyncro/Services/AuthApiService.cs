@@ -25,5 +25,18 @@ namespace ProyectoSyncro.Services
             var response = await _httpClient.PostAsJsonAsync("api/Auth/register", data);
             return response.IsSuccessStatusCode;
         }
+
+        // Añade estos métodos de la API:
+        public async Task<bool> RequestRecoverAsync(string email)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Auth/recoverpassword", new { Email = email });
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Auth/resetpassword", new { Token = token, NuevaPassword = newPassword });
+            return response.IsSuccessStatusCode;
+        }
     }
 }

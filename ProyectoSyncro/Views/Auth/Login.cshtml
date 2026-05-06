@@ -47,7 +47,7 @@
             <div class="form-group">
                 <label style="display: flex; justify-content: space-between;">
                     Contraseña
-                    <a href="#" style="color: var(--brand); font-weight: 600; text-decoration: none;">¿Olvidaste tu clave?</a>
+                    <a href="javascript:void(0)" onclick="solicitarRecuperacion()" style="color: var(--brand); font-weight: 600; text-decoration: none;">¿Olvidaste tu clave?</a>
                 </label>
                 <input type="password" class="form-control" name="password" placeholder="••••••••" required />
             </div>
@@ -69,5 +69,51 @@
             });
         </script>
     }
+
+    <script>
+        function solicitarRecuperacion() {
+            Swal.fire({
+                title: 'Recuperar contraseña',
+                text: 'Introduce el correo electrónico asociado a tu cuenta.',
+                input: 'email',
+                inputPlaceholder: 'hola@tuempresa.com',
+                showCancelButton: true,
+                confirmButtonText: 'Enviar enlace',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#64748b',
+                showLoaderOnConfirm: true,
+                preConfirm: (email) => {
+                    // Creamos el form para enviarlo al controlador MVC
+                    var formData = new FormData();
+                    formData.append('email', email);
+
+                    return fetch('/Auth/RecuperarPassword', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error al enviar la solicitud.');
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Ocurrió un error: ${error.message}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: '¡Correo enviado!',
+                        text: 'Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña en unos minutos.',
+                        icon: 'success',
+                        confirmButtonColor: '#2563eb'
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>

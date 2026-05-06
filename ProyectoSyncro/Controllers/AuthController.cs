@@ -100,5 +100,37 @@ namespace ProyectoSyncro.Controllers
             HttpContext.Session.Clear(); // Limpiamos el Token
             return RedirectToAction("Login", "Auth");
         }
+
+        // Dentro de AuthController, añade:
+        [HttpPost]
+        public async Task<IActionResult> RecuperarPassword(string email)
+        {
+            bool ok = await _authService.RequestRecoverAsync(email);
+            if (ok)
+                return Json(new { success = true });
+            else
+                return BadRequest();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string token)
+        {
+            if (string.IsNullOrEmpty(token)) return RedirectToAction("Login");
+            ViewData["TOKEN_RESET"] = token;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RestablecerClave(string token, string password)
+        {
+            bool ok = await _authService.ResetPasswordAsync(token, password);
+            if (ok)
+            {
+                 ViewData["MENSAJE"] = "Tu contraseña ha sido cambiada correctamente.";
+                 return View("Login");
+            }
+            TempData["InvalidCredentials"] = "El enlace de recuperación es inválido o ha caducado.";
+            return RedirectToAction("Login");
+        }
     }
 }

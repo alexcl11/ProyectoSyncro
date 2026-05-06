@@ -92,6 +92,34 @@ namespace ProyectoSyncro.Api.Repositories
             return (int)resultParam.Value;
         }
 
+        public async Task<Usuario> GetUserByEmailAsync(string email)
+        {
+            // Buscamos directamente en el modelo de Usuario, que es quien tiene el Email
+            return await this.context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+        }
 
+        public async Task<bool> ResetPasswordAsync(string email, string nuevaClave)
+        {
+            // Primero encontramos al Usuario principal por el email
+            Usuario userObj = await this.context.Usuarios
+                                        .Include(u => u.UsuarioAux) // Incluimos sus datos auxiliares
+                                        .FirstOrDefaultAsync(u => u.Email == email);
+
+            if (userObj == null || userObj.UsuarioAux == null) return false;
+
+            // Generamos un nuevo salt y pass cifrado usando las herramientas tuyas
+            string salt = HelperTools.GenerateSalt();
+            byte[] passwordHash = HelperCryptography.EncryptPassword(nuevaClave, salt);
+
+            // Actualizamos los campos en la tabla UsuarioAux
+            userObj.UsuarioAux.Salt = salt;
+            userObj.UsuarioAux.Password = passwordHash; // Se llama Password en UsuarioAux, no PasswordAux
+
+            // Si también guardas la clave en texto plano o un string simple en Usuario.Password (no recomendado, pero por si acaso está en tu DB)
+            userObj.Password = nuevaClave; 
+
+            await this.context.SaveChangesAsync();
+            return true;
+        }
     }
 }
